@@ -3,11 +3,8 @@
 
 /* main.c */
 #define IDLE 0
-//#define BUSY 1
 #define BIT_LENGTH 8
-//#define MSG_CLEAR    0
 #define MSG_SENT     1
-//#define MSG_REPLIED  0
 #define MSG_RECEIVED 1
 
 /* gpio.c */
@@ -29,6 +26,12 @@ void SetGpioFunction(int, int);
 void SetGpio(int, int);
 int GetGpio(int);
 void SetPullUpDn(int, int);
+int ReadChar(int*, const int);
+int WriteChar(int *, const int);
+void GpioInputSetup(int, int, int);
+void GpioOutputSetup(int, int, int);
+void debug();
+void error();
 
 /* systemTimer.c */
 int GetSystemTimerBase();
