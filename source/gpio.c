@@ -171,21 +171,21 @@ int ReadChar(int *buf, const int len) {
         int i;
         for (i=0; i<len; i++) {
                 /* Check Error */
-                if (GetGpio(TOS_READ_STATUS) != IDLE) {
+                if (GetGpio(TOS_READ_STATUS) != MSG_IDLE) {
                         error();
                         return -1;
                 }
                 /* Wait until Terminal Status change to MSG_SENT */
-                while (GetGpio(TERMINAL_WRITE_STATUS) == IDLE)
+                while (GetGpio(TERMINAL_WRITE_STATUS) == MSG_IDLE)
                         Wait(10);
 
                 /* Read bits */
                 *(buf+i) = GetGpio(TERMINAL_INPUT_BITS);
                 SetGpio(TOS_READ_STATUS, MSG_RECEIVED);
                 /* Make sure terminal side is finished */
-                while (GetGpio(TERMINAL_WRITE_STATUS) != IDLE)
+                while (GetGpio(TERMINAL_WRITE_STATUS) != MSG_IDLE)
                         Wait(10);
-                SetGpio(TOS_READ_STATUS, IDLE);
+                SetGpio(TOS_READ_STATUS, MSG_IDLE);
         }
         return 0;
 }
@@ -206,19 +206,19 @@ int WriteChar(int *buf, const int len) {
         int i;
         for (i=0; i<len; i++) {
                 /* Check error */
-                if (GetGpio(TOS_WRITE_STATUS) != IDLE) {
+                if (GetGpio(TOS_WRITE_STATUS) != MSG_IDLE) {
                         error();
                         return -1;
                 }
                 /* Make sure terminal side is ready */
-                while (GetGpio(TERMINAL_READ_STATUS) != IDLE)
+                while (GetGpio(TERMINAL_READ_STATUS) != MSG_IDLE)
                         Wait(10);
                 SetGpio(TOS_OUTPUT_BITS, *(buf+i));
                 SetGpio(TOS_WRITE_STATUS, MSG_SENT);
                 /* Wait terminal read msg */
                 while (GetGpio(TERMINAL_READ_STATUS) != MSG_RECEIVED)
                         Wait(10);
-                SetGpio(TOS_WRITE_STATUS, IDLE);
+                SetGpio(TOS_WRITE_STATUS, MSG_IDLE);
 
         }
         return 0;
@@ -271,6 +271,38 @@ void GpioOutputSetup(int tos_bits, int tos_read, int tos_write) {
         TOS_WRITE_STATUS      = tos_write;
 }
 
+/*
+ * WriteString()
+ * -------------
+ *  Write string to output
+ *
+ *  Parameters:
+ *  str: string
+ *
+ *  Return:
+ *  -1: Error
+ *  0: Success 
+ */
+int WriteString(char *str) {
+        int value[BIT_LENGTH], ret;
+        char* ptr = str;
+        while(*ptr != '\0') {
+                charToBin(*ptr, value, BIT_LENGTH);
+                ret = WriteChar(value, BIT_LENGTH);
+                if (ret == -1) {
+                        error();
+                        return -1;
+                }
+                ptr += 1;
+        }
+        charToBin('\0', value, BIT_LENGTH);
+        ret = WriteChar(value, BIT_LENGTH);
+        if (ret == -1) {
+                error();
+                return -1;
+        }
+        return 0;
+}
 /*
  * debug()
  * -------
