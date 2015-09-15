@@ -1,6 +1,7 @@
 #ifndef __KERNEL__
 #define __KERNEL__
 
+#include <assert.h>
 /* general */
 #define TRUE    1
 #define FALSE   0
@@ -48,11 +49,19 @@ void Wait(int);
 
 /* mem.c */
 typedef unsigned        MEM_ADDR;
+typedef unsigned char   BYTE;
+typedef unsigned short  WORD;
+typedef unsigned        LONG;
+
+void poke_b(MEM_ADDR addr, BYTE value);
+void poke_w(MEM_ADDR addr, WORD value);
+void poke_l(MEM_ADDR addr, LONG value);
+BYTE peek_b(MEM_ADDR addr);
+WORD peek_w(MEM_ADDR addr);
+LONG peek_l(MEM_ADDR addr);
 
 /* process.c */
-
-/* Max number of processes */
-#define MAX_PROCS 20
+#define MAX_PROCS 20            /* Max number of processes */
 
 #define STATE_READY             0
 #define STATE_SEND_BLOCKED      1
@@ -73,7 +82,7 @@ typedef struct _PCB {
         unsigned        used;
         unsigned short  priority;
         unsigned short  state;
-        MEM_ADDR        esp;
+        MEM_ADDR        sp;
         PROCESS         param_proc;
         void*           param_data;
         PORT            first_port;
@@ -85,7 +94,9 @@ typedef struct _PCB {
 } PCB;
 
 extern PCB pcb[];
+typedef unsigned PARAM;
 void init_process();
+PORT create_process();
 
 /* dispatch.c */
 #define MAX_READY_QUEUES 8
@@ -94,6 +105,10 @@ extern PCB* ready_queue[];
 
 void init_dispatcher();
 void add_ready_queue(PROCESS proc);
+void remove_ready_queue(PROCESS proc);
+PROCESS dispatcher();
+void resign();
+
 
 /* stdlib.c */
 void charToBin(char, int*, const int);

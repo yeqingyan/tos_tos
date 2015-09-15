@@ -1,5 +1,6 @@
 #include <kernel.h>
 
+#define HIGHEST_PRIORITY 7
 PROCESS active_proc;
 /* Ready queues for all eight priorites */
 PCB *ready_queue[MAX_READY_QUEUES];
@@ -35,6 +36,92 @@ void add_ready_queue (PROCESS proc)
                 ready_queue[proc->priority]->prev = proc;
         }
         /* TODO enable interrupt here*/
+}
+
+/*
+ * remove_ready_queue()
+ * --------------------
+ *  The process pointed to by p is dequeued from the ready queue.
+ *
+ *  Parameters:
+ *  proc: process need to remove from ready queue
+ */
+void remove_ready_queue (PROCESS proc)
+{
+        // TODO save interrupt
+        if (proc->next == proc) {
+                /* I am the only process in the queue */
+                ready_queue[proc->priority] = NULL;
+                proc->prev = NULL;
+                proc->next = NULL;
+        } else {
+                if (proc == ready_queue[proc->priority]) {
+                        /* I am the head of the list */
+                        ready_queue[proc->priority] = proc->next;
+                }
+                proc->prev->next = proc->next;
+                proc->next->prev = proc->prev;
+                proc->prev = NULL;
+                proc->next = NULL;
+        }
+        
+        // TODO enable interrupt
+}
+/*
+ * dispatcher()
+ * ----------
+ *  Determines a new process to dispatched. The process
+ *  with the highest priority is taken. Within one priority
+ *  level round robin is used
+ */
+PROCESS dispatcher()
+{
+        int i;
+        int cur_pri = active_proc->priority;
+
+        for(i=HIGHEST_PRIORITY; i>=0; i--) {
+                if(ready_queue[i] != NULL) {
+                        //same priority use round robin
+                        if((i == cur_pri) && (ready_queue[i] == active_proc)) {
+                                ready_queue[i] = ready_queue[i]->next;
+                        }
+                        return ready_queue[i];
+                }
+        }
+
+        // should not run into this line
+        assert(0);
+        return NULL;
+}
+
+/*
+ * resign()
+ * --------
+ *  The current process gives up the CPU voluntarily. The
+ *  next running process is determined iva dispatcher().
+ *  The stack of the calling process is setup such that is
+ *  looks like on interrupt.
+ */
+void resign()
+{
+        /* 1. save the content of the current process
+         * Note: Push a list of register in stack, the lowest-numbered register to the lowest memory address
+         * through to the highest-numbered register to the highest memory address.
+         * The sp(r13) and pc(r15) register cannot be in the list. (From ARMv6 manual.)
+         */
+        //register int sp asm("sp");
+        asm("push {r0-r12}");
+
+        // 2. set active process
+        //active_proc->sp = sp;
+        asm("mov %[old_sp], %%sp": [old_sp] "=r" (active_proc->sp):);
+        active_proc = dispatcher();
+        //sp = active_proc->sp;
+        asm("mov %%sp, %[new_sp]" : :[new_sp] "r" (active_proc->sp));
+
+        asm("pop {r0-r12}");
+        // TODO change to iret
+        //asm("ret");
 }
 
 /*
