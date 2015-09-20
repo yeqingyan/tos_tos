@@ -64,10 +64,6 @@ PORT create_process (void (*ptr_to_new_proc) (PROCESS, PARAM), int prio, PARAM p
         sp -= 4;
         poke_l(sp, (LONG)ptr_to_new_proc);
 
-        /* TODO r3 temp */
-        sp -= 4;
-        poke_l(sp, 0);
-        
         /* initialize r0 to r12 */
         for (j=0; j<=12; j++){ 
                 sp -= 4;

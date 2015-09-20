@@ -26,7 +26,7 @@ MAP = kernel.map
 
 # The names of all object files that must be generated. Deduced from the 
 # assembly code files in source.
-OBJECTS := $(patsubst $(SOURCE)%.c,$(BUILD)%.o,$(wildcard $(SOURCE)*.c))
+OBJECTS := $(patsubst $(SOURCE)%.c,$(BUILD)%.o,$(wildcard $(SOURCE)*.c)) $(patsubst $(SOURCE)%.s, $(BUILD)%.o, $(wildcard $(SOURCE)*.s))
 
 # Rule to make everything.
 all: $(TARGET) $(LIST)
@@ -50,7 +50,10 @@ $(BUILD)output.elf : $(OBJECTS)
 # Note by Yeqing:
 # Gcc using -O2 or -O3 sometimes got problems, if code runs not as expected, try turn off -O first 
 $(BUILD)%.o: $(SOURCE)%.c $(BUILD)
-	$(ARMGNU)-gcc -Wall -I./include -g -fomit-frame-pointer -c $< -o $@
+	$(ARMGNU)-gcc -Wall -I./include -g -fomit-frame-pointer -fno-defer-pop -march=armv6 -c $< -o $@
+
+$(BUILD)%.o: $(SOURCE)%.s $(BUILD)
+	$(ARMGNU)-as -I./include $< -o $@
 
 $(BUILD):
 	mkdir $@

@@ -34,6 +34,7 @@ void test_process_2(PROCESS self, PARAM param) {
 }
 
 int main(){
+   
         /* Setup GPIO pins */
         /* TERMINAL_BITS: 25, TERMINAL_READ: 7, TERMINAL_WRITE: 8 */
         GpioInputSetup(25, 7, 8);

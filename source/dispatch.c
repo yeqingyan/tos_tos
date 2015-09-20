@@ -102,26 +102,32 @@ PROCESS dispatcher()
  *  The stack of the calling process is setup such that is
  *  looks like on interrupt.
  */
+/* 
+ * Using resign_impl here to avoid compiler push r3 and lr register before
+ * regisn() function start. 
+ */
+void resign_impl() {
+        active_proc = dispatcher();
+}
 void resign()
 {
+        /* before we call resign_impl function, save the return address into stack */ 
+        asm("push {lr}");
         /* 1. save the content of the current process
          * Note: Push a list of register in stack, the lowest-numbered register to the lowest memory address
          * through to the highest-numbered register to the highest memory address.
          * The sp(r13) and pc(r15) register cannot be in the list. (From ARMv6 manual.)
          */
-        //register int sp asm("sp");
         asm("push {r0-r12}");
 
         // 2. set active process
-        //active_proc->sp = sp;
         asm("mov %[old_sp], %%sp": [old_sp] "=r" (active_proc->sp):);
-        active_proc = dispatcher();
-        //sp = active_proc->sp;
+        asm("bl resign_impl");
         asm("mov %%sp, %[new_sp]" : :[new_sp] "r" (active_proc->sp));
 
         asm("pop {r0-r12}");
+        asm("pop {pc}");
         // TODO change to iret
-        //asm("ret");
 }
 
 /*

@@ -14,6 +14,7 @@
 #define MSG_IDLE        0
 #define MSG_SENT        1
 #define MSG_RECEIVED    1
+int main();
 
 /* gpio.c */
 #define GPIO_LOW        0
