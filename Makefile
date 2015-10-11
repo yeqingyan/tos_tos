@@ -44,13 +44,13 @@ $(TARGET) : $(BUILD)output.elf
 
 # Rule to make the elf file.
 $(BUILD)output.elf : $(OBJECTS)
-	$(ARMGNU)-ld $(OBJECTS) -Map $(MAP) -o $(BUILD)output.elf
+	$(ARMGNU)-ld --section-start .init=0x10000 $(OBJECTS) -Map $(MAP) -o $(BUILD)output.elf
 
 # Rule to make the object files.
 # Note by Yeqing:
 # Gcc using -O2 or -O3 sometimes got problems, if code runs not as expected, try turn off -O first 
 $(BUILD)%.o: $(SOURCE)%.c $(BUILD)
-	$(ARMGNU)-gcc -Wall -I./include -g -fomit-frame-pointer -fno-defer-pop -march=armv6 -c $< -o $@
+	$(ARMGNU)-gcc -g -Wall -I./include -g -fomit-frame-pointer -fno-defer-pop -march=armv6 -c $< -o $@
 
 $(BUILD)%.o: $(SOURCE)%.s $(BUILD)
 	$(ARMGNU)-as -I./include $< -o $@
