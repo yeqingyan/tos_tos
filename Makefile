@@ -1,14 +1,6 @@
-###############################################################################
-#	makefile
-#	 by Alex Chadwick
-#
-#	A makefile script for generation of raspberry pi kernel images.
-###############################################################################
-
-# The toolchain to use. arm-none-eabi works, but there does exist 
-# arm-bcm2708-linux-gnueabi.
 ARMGNU ?= arm-none-eabi
 
+GCCARGS = -Wall -nostdinc -I./include -g -nostartfiles -fomit-frame-pointer -fno-defer-pop -mcpu=arm1176jzf-s
 # The intermediate directory for compiled object files.
 BUILD = build/
 
@@ -29,7 +21,14 @@ MAP = kernel.map
 OBJECTS := $(patsubst $(SOURCE)%.c,$(BUILD)%.o,$(wildcard $(SOURCE)*.c)) $(patsubst $(SOURCE)%.s, $(BUILD)%.o, $(wildcard $(SOURCE)*.s))
 
 # Rule to make everything.
+# Boot address for Raspberry Pi is 0x8000
+all: BOOT_ADDRESS = 0x8000
 all: $(TARGET) $(LIST)
+
+# Rule to make image for qemu
+# qemu boot start address is 0x10000
+qemu: BOOT_ADDRESS = 0x10000
+qemu: $(TARGET) $(LIST)
 
 # Rule to remake everything. Does not include clean.
 rebuild: all
@@ -44,13 +43,14 @@ $(TARGET) : $(BUILD)output.elf
 
 # Rule to make the elf file.
 $(BUILD)output.elf : $(OBJECTS)
-	$(ARMGNU)-ld --section-start .init=0x10000 $(OBJECTS) -Map $(MAP) -o $(BUILD)output.elf
+	$(ARMGNU)-gcc $(GCCARGS) $(OBJECTS) -o $(BUILD)output.elf -Wl,--section-start,.init=$(BOOT_ADDRESS),--section-start,.stack=0xA0000,-Map=$(MAP)
+	#$(ARMGNU)-ld --section-start .init=0x10000 $(OBJECTS) -Map $(MAP) -o $(BUILD)output.elf
 
 # Rule to make the object files.
 # Note by Yeqing:
 # Gcc using -O2 or -O3 sometimes got problems, if code runs not as expected, try turn off -O first 
 $(BUILD)%.o: $(SOURCE)%.c $(BUILD)
-	$(ARMGNU)-gcc -g -Wall -I./include -g -fomit-frame-pointer -fno-defer-pop -march=armv6 -c $< -o $@
+	$(ARMGNU)-gcc $(GCCARGS) -c $< -o $@
 
 $(BUILD)%.o: $(SOURCE)%.s $(BUILD)
 	$(ARMGNU)-as -I./include $< -o $@

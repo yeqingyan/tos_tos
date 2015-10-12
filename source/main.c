@@ -5,7 +5,7 @@ int main();
 void test_process_1(PROCESS , PARAM );
 
 void _start(){
-        asm("mov sp, #0x8000");         /* Setup stack pointer */
+        asm("mov sp, #0xA0000");         /* Setup stack pointer */
         main();
 }
 

@@ -2,12 +2,14 @@
 #define __KERNEL__
 
 #include <assert.h>
+#include <stdarg.h>
 /* general */
 #define TRUE    1
 #define FALSE   0
 #ifndef NULL
 #define NULL    ((void *) 0)
 #endif
+typedef int BOOL;
 
 /* main.c */
 #define BIT_LENGTH 8
@@ -80,7 +82,7 @@ typedef struct _PORT_DEF* PORT;
 
 typedef struct _PCB {
         unsigned        magic;
-        unsigned        used;
+        BOOL            used;
         unsigned short  priority;
         unsigned short  state;
         MEM_ADDR        sp;
@@ -113,4 +115,5 @@ void resign();
 
 /* stdlib.c */
 void charToBin(char, int*, const int);
+void vs_printf(char *, const char*, va_list);
 #endif
