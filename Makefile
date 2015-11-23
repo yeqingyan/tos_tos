@@ -44,7 +44,6 @@ $(TARGET) : $(BUILD)output.elf
 # Rule to make the elf file.
 $(BUILD)output.elf : $(OBJECTS)
 	$(ARMGNU)-gcc $(GCCARGS) $(OBJECTS) -o $(BUILD)output.elf -Wl,--section-start,.init=$(BOOT_ADDRESS),--section-start,.stack=0xA0000,-Map=$(MAP)
-	#$(ARMGNU)-ld --section-start .init=0x10000 $(OBJECTS) -Map $(MAP) -o $(BUILD)output.elf
 
 # Rule to make the object files.
 # Note by Yeqing:

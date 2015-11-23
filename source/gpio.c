@@ -21,7 +21,8 @@ void short_wait(void) {
 }
 
 int GetGpioAddress() {
-        return 0x20200000;
+        return GPIO_BASE;
+        //return 0x20200000;
 }
 
 /*

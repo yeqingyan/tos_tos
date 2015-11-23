@@ -19,6 +19,7 @@ typedef int BOOL;
 int main();
 
 /* gpio.c */
+#define GPIO_BASE       0x20200000
 #define GPIO_LOW        0
 #define GPIO_HIGH       1
 #define GPIO_INPUT      0       /* GPIO Function 0: input */
@@ -116,4 +117,50 @@ void resign();
 /* stdlib.c */
 void charToBin(char, int*, const int);
 void vs_printf(char *, const char*, va_list);
+
+/* intr.c */
+#define ENABLE_INTR()   asm("mrs r0, cpsr"); \
+                        asm("bic r0, r0, #0x80"); \
+                        asm("msr cpsr_c, r0");
+
+        
+#define DISABLE_INTR()  asm("mrs r0, cpsr"); \
+                        asm("orr r0, r0, #0x80"); \
+                        asm("msr cpsr_c, r0");
+
+/* Based on BCM2835 Document Section 7.5 Interrupt Registers Overview */
+#define INTR_BASE       0x2000B000
+typedef struct {
+        volatile LONG IRQ_Basic_Pending;
+        volatile LONG IRQ_Pending_1;
+        volatile LONG IRQ_Pending_2;
+        volatile LONG IRQ_FIQ_Control;
+        volatile LONG Enable_IRQs_1;
+        volatile LONG Enable_IRQs_2;
+        volatile LONG Enable_Basic_IRQs;
+        volatile LONG Disable_IRQs_1;
+        volatile LONG Disable_IRQs_2;
+        volatile LONG Disable_Basic_IRQs;
+} irq_controller_t;
+/* Timer registers offset from BCM2835 Section 14.2 Timer Registers */
+#define ARM_TIMER_BASE  0x2000B400
+typedef struct {
+        volatile LONG Load;
+        volatile LONG Value;
+        volatile LONG Control;
+        volatile LONG IRQ_Clear;
+        volatile LONG RAW_IRQ;
+        volatile LONG Masked_IRQ;
+        volatile LONG Reload;
+        volatile LONG Pre_Divider;
+        volatile LONG Free_Running_Counter;
+} arm_timer_t;
+#define INTR_TIMER_CTRL_23BIT           (1 << 1) // Use 23-bit counter(it should be 32-bit)
+#define INTR_TIMER_CTRL_ENABLE          (1 << 7) // Timer Enabled
+#define INTR_TIMER_CTRL_INT_ENABLE      (1 << 5) // Enable Timer interrupt
+#define INTR_TIMER_CTRL_PRESCALE_1      (0 << 2) // Pre-scal is clock/1 (No pre-scale)
+/* Based on BCM2835 Document Section 7.5 ARM peripherals interrupts table */
+#define INTR_ARM_TIMER                  (1 << 0)
+#define CLK_FREQ                        1000000  // System Timer on BCM2835 is 1MHz.(Throught not mentioned in BCM2835 document)
+void init_interrupts(void);
 #endif
