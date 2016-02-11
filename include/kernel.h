@@ -129,7 +129,7 @@ void vs_printf(char *, const char*, va_list);
                         asm("msr cpsr_c, r0");
 
 /* Based on BCM2835 Document Section 7.5 Interrupt Registers Overview */
-#define INTR_BASE       0x2000B000
+#define INTR_BASE       0x2000B200
 typedef struct {
         volatile LONG IRQ_Basic_Pending;
         volatile LONG IRQ_Pending_1;
