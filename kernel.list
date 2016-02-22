@@ -1,0 +1,3360 @@
+
+build/output.elf:     file format elf32-littlearm
+
+
+Disassembly of section .init:
+
+00010000 <_start>:
+   10000:	e59ff018 	ldr	pc, [pc, #24]	; 10020 <reset_addr>
+   10004:	e59ff018 	ldr	pc, [pc, #24]	; 10024 <undef_addr>
+   10008:	e59ff018 	ldr	pc, [pc, #24]	; 10028 <swi_addr>
+   1000c:	e59ff018 	ldr	pc, [pc, #24]	; 1002c <prefetch_addr>
+   10010:	e59ff018 	ldr	pc, [pc, #24]	; 10030 <abort_addr>
+   10014:	e59ff018 	ldr	pc, [pc, #24]	; 10034 <reserved_addr>
+   10018:	e59ff018 	ldr	pc, [pc, #24]	; 10038 <irq_addr>
+   1001c:	e59ff018 	ldr	pc, [pc, #24]	; 1003c <fiq_addr>
+
+00010020 <reset_addr>:
+   10020:	00011cc8 	.word	0x00011cc8
+
+00010024 <undef_addr>:
+   10024:	00011cf4 	.word	0x00011cf4
+
+00010028 <swi_addr>:
+   10028:	00011cfc 	.word	0x00011cfc
+
+0001002c <prefetch_addr>:
+   1002c:	00011d04 	.word	0x00011d04
+
+00010030 <abort_addr>:
+   10030:	00011d0c 	.word	0x00011d0c
+
+00010034 <reserved_addr>:
+   10034:	00011cc8 	.word	0x00011cc8
+
+00010038 <irq_addr>:
+   10038:	00011f9c 	.word	0x00011f9c
+
+0001003c <fiq_addr>:
+   1003c:	00011d14 	.word	0x00011d14
+
+Disassembly of section .text:
+
+00010040 <add_ready_queue>:
+ *  Parameters:
+ *  proc: process need to be added
+ */
+
+void add_ready_queue (PROCESS proc)
+{
+   10040:	e24dd008 	sub	sp, sp, #8
+   10044:	e58d0004 	str	r0, [sp, #4]
+
+        /* TODO disable interrupt here */
+
+        // add proc to ready queue
+        // proc add to the tail of the double linked list depend on its priority
+        if (ready_queue[proc->priority] == NULL) {
+   10048:	e59d3004 	ldr	r3, [sp, #4]
+   1004c:	e1d330b8 	ldrh	r3, [r3, #8]
+   10050:	e1a02003 	mov	r2, r3
+   10054:	e59f30bc 	ldr	r3, [pc, #188]	; 10118 <_endvectors+0xd8>
+   10058:	e7933102 	ldr	r3, [r3, r2, lsl #2]
+   1005c:	e3530000 	cmp	r3, #0
+   10060:	1a00000c 	bne	10098 <add_ready_queue+0x58>
+                // add first process
+                ready_queue[proc->priority] = proc;
+   10064:	e59d3004 	ldr	r3, [sp, #4]
+   10068:	e1d330b8 	ldrh	r3, [r3, #8]
+   1006c:	e1a01003 	mov	r1, r3
+   10070:	e59f20a0 	ldr	r2, [pc, #160]	; 10118 <_endvectors+0xd8>
+   10074:	e59d3004 	ldr	r3, [sp, #4]
+   10078:	e7823101 	str	r3, [r2, r1, lsl #2]
+                proc->next = proc;
+   1007c:	e59d3004 	ldr	r3, [sp, #4]
+   10080:	e59d2004 	ldr	r2, [sp, #4]
+   10084:	e5832020 	str	r2, [r3, #32]
+                proc->prev = proc;
+   10088:	e59d3004 	ldr	r3, [sp, #4]
+   1008c:	e59d2004 	ldr	r2, [sp, #4]
+   10090:	e5832024 	str	r2, [r3, #36]	; 0x24
+   10094:	ea00001d 	b	10110 <add_ready_queue+0xd0>
+        } else {
+                // add process to the tail of the linked list
+                proc->next = ready_queue[proc->priority];
+   10098:	e59d3004 	ldr	r3, [sp, #4]
+   1009c:	e1d330b8 	ldrh	r3, [r3, #8]
+   100a0:	e1a02003 	mov	r2, r3
+   100a4:	e59f306c 	ldr	r3, [pc, #108]	; 10118 <_endvectors+0xd8>
+   100a8:	e7932102 	ldr	r2, [r3, r2, lsl #2]
+   100ac:	e59d3004 	ldr	r3, [sp, #4]
+   100b0:	e5832020 	str	r2, [r3, #32]
+                proc->prev = ready_queue[proc->priority]->prev;
+   100b4:	e59d3004 	ldr	r3, [sp, #4]
+   100b8:	e1d330b8 	ldrh	r3, [r3, #8]
+   100bc:	e1a02003 	mov	r2, r3
+   100c0:	e59f3050 	ldr	r3, [pc, #80]	; 10118 <_endvectors+0xd8>
+   100c4:	e7933102 	ldr	r3, [r3, r2, lsl #2]
+   100c8:	e5932024 	ldr	r2, [r3, #36]	; 0x24
+   100cc:	e59d3004 	ldr	r3, [sp, #4]
+   100d0:	e5832024 	str	r2, [r3, #36]	; 0x24
+                ready_queue[proc->priority]->prev->next = proc;
+   100d4:	e59d3004 	ldr	r3, [sp, #4]
+   100d8:	e1d330b8 	ldrh	r3, [r3, #8]
+   100dc:	e1a02003 	mov	r2, r3
+   100e0:	e59f3030 	ldr	r3, [pc, #48]	; 10118 <_endvectors+0xd8>
+   100e4:	e7933102 	ldr	r3, [r3, r2, lsl #2]
+   100e8:	e5933024 	ldr	r3, [r3, #36]	; 0x24
+   100ec:	e59d2004 	ldr	r2, [sp, #4]
+   100f0:	e5832020 	str	r2, [r3, #32]
+                ready_queue[proc->priority]->prev = proc;
+   100f4:	e59d3004 	ldr	r3, [sp, #4]
+   100f8:	e1d330b8 	ldrh	r3, [r3, #8]
+   100fc:	e1a02003 	mov	r2, r3
+   10100:	e59f3010 	ldr	r3, [pc, #16]	; 10118 <_endvectors+0xd8>
+   10104:	e7933102 	ldr	r3, [r3, r2, lsl #2]
+   10108:	e59d2004 	ldr	r2, [sp, #4]
+   1010c:	e5832024 	str	r2, [r3, #36]	; 0x24
+        }
+        /* TODO enable interrupt here*/
+}
+   10110:	e28dd008 	add	sp, sp, #8
+   10114:	e12fff1e 	bx	lr
+   10118:	0001a180 	.word	0x0001a180
+
+0001011c <remove_ready_queue>:
+ *
+ *  Parameters:
+ *  proc: process need to remove from ready queue
+ */
+void remove_ready_queue (PROCESS proc)
+{
+   1011c:	e24dd008 	sub	sp, sp, #8
+   10120:	e58d0004 	str	r0, [sp, #4]
+        // TODO save interrupt
+        if (proc->next == proc) {
+   10124:	e59d3004 	ldr	r3, [sp, #4]
+   10128:	e5932020 	ldr	r2, [r3, #32]
+   1012c:	e59d3004 	ldr	r3, [sp, #4]
+   10130:	e1520003 	cmp	r2, r3
+   10134:	1a00000c 	bne	1016c <remove_ready_queue+0x50>
+                /* I am the only process in the queue */
+                ready_queue[proc->priority] = NULL;
+   10138:	e59d3004 	ldr	r3, [sp, #4]
+   1013c:	e1d330b8 	ldrh	r3, [r3, #8]
+   10140:	e1a01003 	mov	r1, r3
+   10144:	e59f30a4 	ldr	r3, [pc, #164]	; 101f0 <remove_ready_queue+0xd4>
+   10148:	e3a02000 	mov	r2, #0
+   1014c:	e7832101 	str	r2, [r3, r1, lsl #2]
+                proc->prev = NULL;
+   10150:	e59d3004 	ldr	r3, [sp, #4]
+   10154:	e3a02000 	mov	r2, #0
+   10158:	e5832024 	str	r2, [r3, #36]	; 0x24
+                proc->next = NULL;
+   1015c:	e59d3004 	ldr	r3, [sp, #4]
+   10160:	e3a02000 	mov	r2, #0
+   10164:	e5832020 	str	r2, [r3, #32]
+   10168:	ea00001e 	b	101e8 <remove_ready_queue+0xcc>
+        } else {
+                if (proc == ready_queue[proc->priority]) {
+   1016c:	e59d3004 	ldr	r3, [sp, #4]
+   10170:	e1d330b8 	ldrh	r3, [r3, #8]
+   10174:	e1a02003 	mov	r2, r3
+   10178:	e59f3070 	ldr	r3, [pc, #112]	; 101f0 <remove_ready_queue+0xd4>
+   1017c:	e7932102 	ldr	r2, [r3, r2, lsl #2]
+   10180:	e59d3004 	ldr	r3, [sp, #4]
+   10184:	e1520003 	cmp	r2, r3
+   10188:	1a000006 	bne	101a8 <remove_ready_queue+0x8c>
+                        /* I am the head of the list */
+                        ready_queue[proc->priority] = proc->next;
+   1018c:	e59d3004 	ldr	r3, [sp, #4]
+   10190:	e1d330b8 	ldrh	r3, [r3, #8]
+   10194:	e1a01003 	mov	r1, r3
+   10198:	e59d3004 	ldr	r3, [sp, #4]
+   1019c:	e5933020 	ldr	r3, [r3, #32]
+   101a0:	e59f2048 	ldr	r2, [pc, #72]	; 101f0 <remove_ready_queue+0xd4>
+   101a4:	e7823101 	str	r3, [r2, r1, lsl #2]
+                }
+                proc->prev->next = proc->next;
+   101a8:	e59d3004 	ldr	r3, [sp, #4]
+   101ac:	e5933024 	ldr	r3, [r3, #36]	; 0x24
+   101b0:	e59d2004 	ldr	r2, [sp, #4]
+   101b4:	e5922020 	ldr	r2, [r2, #32]
+   101b8:	e5832020 	str	r2, [r3, #32]
+                proc->next->prev = proc->prev;
+   101bc:	e59d3004 	ldr	r3, [sp, #4]
+   101c0:	e5933020 	ldr	r3, [r3, #32]
+   101c4:	e59d2004 	ldr	r2, [sp, #4]
+   101c8:	e5922024 	ldr	r2, [r2, #36]	; 0x24
+   101cc:	e5832024 	str	r2, [r3, #36]	; 0x24
+                proc->prev = NULL;
+   101d0:	e59d3004 	ldr	r3, [sp, #4]
+   101d4:	e3a02000 	mov	r2, #0
+   101d8:	e5832024 	str	r2, [r3, #36]	; 0x24
+                proc->next = NULL;
+   101dc:	e59d3004 	ldr	r3, [sp, #4]
+   101e0:	e3a02000 	mov	r2, #0
+   101e4:	e5832020 	str	r2, [r3, #32]
+        }
+        
+        // TODO enable interrupt
+}
+   101e8:	e28dd008 	add	sp, sp, #8
+   101ec:	e12fff1e 	bx	lr
+   101f0:	0001a180 	.word	0x0001a180
+
+000101f4 <dispatcher>:
+ *  Determines a new process to dispatched. The process
+ *  with the highest priority is taken. Within one priority
+ *  level round robin is used
+ */
+PROCESS dispatcher()
+{
+   101f4:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   101f8:	e24dd00c 	sub	sp, sp, #12
+        int i;
+        int cur_pri = active_proc->priority;
+   101fc:	e59f30ac 	ldr	r3, [pc, #172]	; 102b0 <dispatcher+0xbc>
+   10200:	e5933000 	ldr	r3, [r3]
+   10204:	e1d330b8 	ldrh	r3, [r3, #8]
+   10208:	e58d3000 	str	r3, [sp]
+
+        for(i=HIGHEST_PRIORITY; i>=0; i--) {
+   1020c:	e3a03007 	mov	r3, #7
+   10210:	e58d3004 	str	r3, [sp, #4]
+   10214:	ea00001d 	b	10290 <dispatcher+0x9c>
+                if(ready_queue[i] != NULL) {
+   10218:	e59f2094 	ldr	r2, [pc, #148]	; 102b4 <dispatcher+0xc0>
+   1021c:	e59d3004 	ldr	r3, [sp, #4]
+   10220:	e7923103 	ldr	r3, [r2, r3, lsl #2]
+   10224:	e3530000 	cmp	r3, #0
+   10228:	0a000015 	beq	10284 <dispatcher+0x90>
+                        //same priority use round robin
+                        if((i == cur_pri) && (ready_queue[i] == active_proc)) {
+   1022c:	e59d2004 	ldr	r2, [sp, #4]
+   10230:	e59d3000 	ldr	r3, [sp]
+   10234:	e1520003 	cmp	r2, r3
+   10238:	1a00000d 	bne	10274 <dispatcher+0x80>
+   1023c:	e59f2070 	ldr	r2, [pc, #112]	; 102b4 <dispatcher+0xc0>
+   10240:	e59d3004 	ldr	r3, [sp, #4]
+   10244:	e7922103 	ldr	r2, [r2, r3, lsl #2]
+   10248:	e59f3060 	ldr	r3, [pc, #96]	; 102b0 <dispatcher+0xbc>
+   1024c:	e5933000 	ldr	r3, [r3]
+   10250:	e1520003 	cmp	r2, r3
+   10254:	1a000006 	bne	10274 <dispatcher+0x80>
+                                ready_queue[i] = ready_queue[i]->next;
+   10258:	e59f2054 	ldr	r2, [pc, #84]	; 102b4 <dispatcher+0xc0>
+   1025c:	e59d3004 	ldr	r3, [sp, #4]
+   10260:	e7923103 	ldr	r3, [r2, r3, lsl #2]
+   10264:	e5932020 	ldr	r2, [r3, #32]
+   10268:	e59f1044 	ldr	r1, [pc, #68]	; 102b4 <dispatcher+0xc0>
+   1026c:	e59d3004 	ldr	r3, [sp, #4]
+   10270:	e7812103 	str	r2, [r1, r3, lsl #2]
+                        }
+                        return ready_queue[i];
+   10274:	e59f2038 	ldr	r2, [pc, #56]	; 102b4 <dispatcher+0xc0>
+   10278:	e59d3004 	ldr	r3, [sp, #4]
+   1027c:	e7923103 	ldr	r3, [r2, r3, lsl #2]
+   10280:	ea000007 	b	102a4 <dispatcher+0xb0>
+PROCESS dispatcher()
+{
+        int i;
+        int cur_pri = active_proc->priority;
+
+        for(i=HIGHEST_PRIORITY; i>=0; i--) {
+   10284:	e59d3004 	ldr	r3, [sp, #4]
+   10288:	e2433001 	sub	r3, r3, #1
+   1028c:	e58d3004 	str	r3, [sp, #4]
+   10290:	e59d3004 	ldr	r3, [sp, #4]
+   10294:	e3530000 	cmp	r3, #0
+   10298:	aaffffde 	bge	10218 <dispatcher+0x24>
+                        return ready_queue[i];
+                }
+        }
+
+        // should not run into this line
+        assert(0);
+   1029c:	eb000261 	bl	10c28 <error>
+        return NULL;
+   102a0:	e3a03000 	mov	r3, #0
+}
+   102a4:	e1a00003 	mov	r0, r3
+   102a8:	e28dd00c 	add	sp, sp, #12
+   102ac:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+   102b0:	0001a17c 	.word	0x0001a17c
+   102b4:	0001a180 	.word	0x0001a180
+
+000102b8 <resign_impl>:
+ *  looks like on interrupt.
+ *  
+ * Use resign_impl helper function, so all code in resign are assembly 
+ * and gcc compile won't add push/pop around the function.    
+ */
+void resign_impl() {
+   102b8:	e92d4008 	push	{r3, lr}
+        active_proc = dispatcher();
+   102bc:	ebffffcc 	bl	101f4 <dispatcher>
+   102c0:	e1a02000 	mov	r2, r0
+   102c4:	e59f3004 	ldr	r3, [pc, #4]	; 102d0 <resign_impl+0x18>
+   102c8:	e5832000 	str	r2, [r3]
+}
+   102cc:	e8bd8008 	pop	{r3, pc}
+   102d0:	0001a17c 	.word	0x0001a17c
+
+000102d4 <resign>:
+        /* 1. save the content of the current process
+         * Note: Push a list of register in stack, the lowest-numbered register to the lowest memory address
+         * through to the highest-numbered register to the highest memory address.
+         * The sp(r13) and pc(r15) register cannot be in the list. (From ARMv6 manual.)
+         */
+        asm("push {r0-r12, r14}");
+   102d4:	e92d5fff 	push	{r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, sl, fp, ip, lr}
+        
+        /* Save cpsr */
+        asm("mrs r12, cpsr");
+   102d8:	e10fc000 	mrs	ip, CPSR
+        asm("push {r12}");
+   102dc:	e52dc004 	push	{ip}		; (str ip, [sp, #-4]!)
+        
+        // 2. set active process
+        asm("mov %[old_sp], %%sp": [old_sp] "=r" (active_proc->sp):);
+   102e0:	e59f302c 	ldr	r3, [pc, #44]	; 10314 <resign+0x40>
+   102e4:	e5933000 	ldr	r3, [r3]
+   102e8:	e1a0200d 	mov	r2, sp
+   102ec:	e583200c 	str	r2, [r3, #12]
+        asm("bl resign_impl");
+   102f0:	ebfffff0 	bl	102b8 <resign_impl>
+        //active_proc = dispatcher();
+        asm("mov %%sp, %[new_sp]" : :[new_sp] "r" (active_proc->sp));
+   102f4:	e59f3018 	ldr	r3, [pc, #24]	; 10314 <resign+0x40>
+   102f8:	e5933000 	ldr	r3, [r3]
+   102fc:	e593300c 	ldr	r3, [r3, #12]
+   10300:	e1a0d003 	mov	sp, r3
+         * TODO: For new process, we do not have a return/exit address, in the future, when we have the return/exit 
+         * function, we setup the return address in create_process() and pop it to lr before pop pc register. For 
+         * other process, we push a garbage value before call dispatcher, since lr will not be used in here. It is
+         * safe we pop the garbage value into lr here.
+        */ 
+        asm("pop {r12}");
+   10304:	e49dc004 	pop	{ip}		; (ldr ip, [sp], #4)
+        asm("msr cpsr_c, r12");
+   10308:	e121f00c 	msr	CPSR_c, ip
+        
+        asm("pop {r0-r12, pc}");
+   1030c:	e8bd9fff 	pop	{r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, sl, fp, ip, pc}
+        
+        // Note: TOS in x86 use "iret" here, in ARM we are still in interrupt after return from resign. 
+}
+   10310:	e12fff1e 	bx	lr
+   10314:	0001a17c 	.word	0x0001a17c
+
+00010318 <init_dispatcher>:
+ * ---------------
+ *  Initialize the necessary data structures.
+ */
+
+void init_dispatcher()
+{
+   10318:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   1031c:	e24dd00c 	sub	sp, sp, #12
+        int i;
+        active_proc = &pcb[0];
+   10320:	e59f3048 	ldr	r3, [pc, #72]	; 10370 <init_dispatcher+0x58>
+   10324:	e59f2048 	ldr	r2, [pc, #72]	; 10374 <init_dispatcher+0x5c>
+   10328:	e5832000 	str	r2, [r3]
+
+        for (i=0; i<MAX_READY_QUEUES; i++)
+   1032c:	e3a03000 	mov	r3, #0
+   10330:	e58d3004 	str	r3, [sp, #4]
+   10334:	ea000006 	b	10354 <init_dispatcher+0x3c>
+                ready_queue[i] = NULL;
+   10338:	e59f2038 	ldr	r2, [pc, #56]	; 10378 <init_dispatcher+0x60>
+   1033c:	e59d3004 	ldr	r3, [sp, #4]
+   10340:	e3a01000 	mov	r1, #0
+   10344:	e7821103 	str	r1, [r2, r3, lsl #2]
+void init_dispatcher()
+{
+        int i;
+        active_proc = &pcb[0];
+
+        for (i=0; i<MAX_READY_QUEUES; i++)
+   10348:	e59d3004 	ldr	r3, [sp, #4]
+   1034c:	e2833001 	add	r3, r3, #1
+   10350:	e58d3004 	str	r3, [sp, #4]
+   10354:	e59d3004 	ldr	r3, [sp, #4]
+   10358:	e3530007 	cmp	r3, #7
+   1035c:	dafffff5 	ble	10338 <init_dispatcher+0x20>
+                ready_queue[i] = NULL;
+
+        add_ready_queue(&pcb[0]);
+   10360:	e59f000c 	ldr	r0, [pc, #12]	; 10374 <init_dispatcher+0x5c>
+   10364:	ebffff35 	bl	10040 <add_ready_queue>
+}
+   10368:	e28dd00c 	add	sp, sp, #12
+   1036c:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+   10370:	0001a17c 	.word	0x0001a17c
+   10374:	0001a1a0 	.word	0x0001a1a0
+   10378:	0001a180 	.word	0x0001a180
+
+0001037c <short_wait>:
+int TOS_READ_STATUS       = 0;
+
+/*
+ * Wait 150 cycles
+ */
+void short_wait(void) {
+   1037c:	e24dd008 	sub	sp, sp, #8
+        int i;
+        
+        for (i=0; i<150; i++) {
+   10380:	e3a03000 	mov	r3, #0
+   10384:	e58d3004 	str	r3, [sp, #4]
+   10388:	ea000003 	b	1039c <short_wait+0x20>
+                asm volatile("nop");
+   1038c:	e320f000 	nop	{0}
+ * Wait 150 cycles
+ */
+void short_wait(void) {
+        int i;
+        
+        for (i=0; i<150; i++) {
+   10390:	e59d3004 	ldr	r3, [sp, #4]
+   10394:	e2833001 	add	r3, r3, #1
+   10398:	e58d3004 	str	r3, [sp, #4]
+   1039c:	e59d3004 	ldr	r3, [sp, #4]
+   103a0:	e3530095 	cmp	r3, #149	; 0x95
+   103a4:	dafffff8 	ble	1038c <short_wait+0x10>
+                asm volatile("nop");
+        }
+}
+   103a8:	e28dd008 	add	sp, sp, #8
+   103ac:	e12fff1e 	bx	lr
+
+000103b0 <GetGpioAddress>:
+
+int GetGpioAddress() {
+        return GPIO_BASE;
+   103b0:	e59f3004 	ldr	r3, [pc, #4]	; 103bc <GetGpioAddress+0xc>
+        //return 0x20200000;
+}
+   103b4:	e1a00003 	mov	r0, r3
+   103b8:	e12fff1e 	bx	lr
+   103bc:	20200000 	.word	0x20200000
+
+000103c0 <SetGpioFunction>:
+ *
+ *  Parameters:
+ *  pin: GPIO pin number
+ *  function: the function want to use. 0: input, 1: output
+ */ 
+void SetGpioFunction(int pin, int function) {
+   103c0:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   103c4:	e24dd01c 	sub	sp, sp, #28
+   103c8:	e58d0004 	str	r0, [sp, #4]
+   103cc:	e58d1000 	str	r1, [sp]
+        /* Check pin between 0 to 53 */
+        if((pin > 53)||(pin < 0))
+   103d0:	e59d3004 	ldr	r3, [sp, #4]
+   103d4:	e3530035 	cmp	r3, #53	; 0x35
+   103d8:	ca000002 	bgt	103e8 <SetGpioFunction+0x28>
+   103dc:	e59d3004 	ldr	r3, [sp, #4]
+   103e0:	e3530000 	cmp	r3, #0
+   103e4:	aa000000 	bge	103ec <SetGpioFunction+0x2c>
+                error();
+   103e8:	eb00020e 	bl	10c28 <error>
+        
+        /* Check function between 0 to 7 */
+        if((function > 8)||(function<0))
+   103ec:	e59d3000 	ldr	r3, [sp]
+   103f0:	e3530008 	cmp	r3, #8
+   103f4:	ca000002 	bgt	10404 <SetGpioFunction+0x44>
+   103f8:	e59d3000 	ldr	r3, [sp]
+   103fc:	e3530000 	cmp	r3, #0
+   10400:	aa000000 	bge	10408 <SetGpioFunction+0x48>
+                error();
+   10404:	eb000207 	bl	10c28 <error>
+        
+        int* gpio_addr = (int *)GetGpioAddress();
+   10408:	ebffffe8 	bl	103b0 <GetGpioAddress>
+   1040c:	e1a03000 	mov	r3, r0
+   10410:	e58d3014 	str	r3, [sp, #20]
+        
+        gpio_addr += pin/10;  /* Find gpio address */
+   10414:	e59d3004 	ldr	r3, [sp, #4]
+   10418:	e59f20f4 	ldr	r2, [pc, #244]	; 10514 <SetGpioFunction+0x154>
+   1041c:	e0c21392 	smull	r1, r2, r2, r3
+   10420:	e1a02142 	asr	r2, r2, #2
+   10424:	e1a03fc3 	asr	r3, r3, #31
+   10428:	e0633002 	rsb	r3, r3, r2
+   1042c:	e1a03103 	lsl	r3, r3, #2
+   10430:	e59d2014 	ldr	r2, [sp, #20]
+   10434:	e0823003 	add	r3, r2, r3
+   10438:	e58d3014 	str	r3, [sp, #20]
+
+        function = function << (pin % 10 * 3);
+   1043c:	e59d1004 	ldr	r1, [sp, #4]
+   10440:	e59f30cc 	ldr	r3, [pc, #204]	; 10514 <SetGpioFunction+0x154>
+   10444:	e0c32193 	smull	r2, r3, r3, r1
+   10448:	e1a02143 	asr	r2, r3, #2
+   1044c:	e1a03fc1 	asr	r3, r1, #31
+   10450:	e0632002 	rsb	r2, r3, r2
+   10454:	e1a03002 	mov	r3, r2
+   10458:	e1a03103 	lsl	r3, r3, #2
+   1045c:	e0833002 	add	r3, r3, r2
+   10460:	e1a03083 	lsl	r3, r3, #1
+   10464:	e0632001 	rsb	r2, r3, r1
+   10468:	e1a03002 	mov	r3, r2
+   1046c:	e1a03083 	lsl	r3, r3, #1
+   10470:	e0833002 	add	r3, r3, r2
+   10474:	e59d2000 	ldr	r2, [sp]
+   10478:	e1a03312 	lsl	r3, r2, r3
+   1047c:	e58d3000 	str	r3, [sp]
+        int mask = 7 << (pin % 10 * 3); /* Create mask */
+   10480:	e59d1004 	ldr	r1, [sp, #4]
+   10484:	e59f3088 	ldr	r3, [pc, #136]	; 10514 <SetGpioFunction+0x154>
+   10488:	e0c32193 	smull	r2, r3, r3, r1
+   1048c:	e1a02143 	asr	r2, r3, #2
+   10490:	e1a03fc1 	asr	r3, r1, #31
+   10494:	e0632002 	rsb	r2, r3, r2
+   10498:	e1a03002 	mov	r3, r2
+   1049c:	e1a03103 	lsl	r3, r3, #2
+   104a0:	e0833002 	add	r3, r3, r2
+   104a4:	e1a03083 	lsl	r3, r3, #1
+   104a8:	e0632001 	rsb	r2, r3, r1
+   104ac:	e1a03002 	mov	r3, r2
+   104b0:	e1a03083 	lsl	r3, r3, #1
+   104b4:	e0833002 	add	r3, r3, r2
+   104b8:	e3a02007 	mov	r2, #7
+   104bc:	e1a03312 	lsl	r3, r2, r3
+   104c0:	e58d3010 	str	r3, [sp, #16]
+        mask = ~mask;
+   104c4:	e59d3010 	ldr	r3, [sp, #16]
+   104c8:	e1e03003 	mvn	r3, r3
+   104cc:	e58d3010 	str	r3, [sp, #16]
+        
+        int gpio_val = *gpio_addr;      /* Got old bit set */
+   104d0:	e59d3014 	ldr	r3, [sp, #20]
+   104d4:	e5933000 	ldr	r3, [r3]
+   104d8:	e58d300c 	str	r3, [sp, #12]
+        gpio_val = gpio_val & mask;
+   104dc:	e59d200c 	ldr	r2, [sp, #12]
+   104e0:	e59d3010 	ldr	r3, [sp, #16]
+   104e4:	e0033002 	and	r3, r3, r2
+   104e8:	e58d300c 	str	r3, [sp, #12]
+        gpio_val = gpio_val ^ function; /* Got final bit set */
+   104ec:	e59d200c 	ldr	r2, [sp, #12]
+   104f0:	e59d3000 	ldr	r3, [sp]
+   104f4:	e0233002 	eor	r3, r3, r2
+   104f8:	e58d300c 	str	r3, [sp, #12]
+        
+        *gpio_addr = gpio_val;
+   104fc:	e59d3014 	ldr	r3, [sp, #20]
+   10500:	e59d200c 	ldr	r2, [sp, #12]
+   10504:	e5832000 	str	r2, [r3]
+
+        return;
+   10508:	e1a00000 	nop			; (mov r0, r0)
+}
+   1050c:	e28dd01c 	add	sp, sp, #28
+   10510:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+   10514:	66666667 	.word	0x66666667
+
+00010518 <SetGpio>:
+ *
+ *  Parameters:
+ *  pin: GPIO pin number
+ *  pinVal: High/Low value
+ */ 
+void SetGpio(int pin, int pinVal){
+   10518:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   1051c:	e24dd014 	sub	sp, sp, #20
+   10520:	e58d0004 	str	r0, [sp, #4]
+   10524:	e58d1000 	str	r1, [sp]
+        /* Check pin between 0 to 53 */
+        if((pin > 53)||(pin < 0))
+   10528:	e59d3004 	ldr	r3, [sp, #4]
+   1052c:	e3530035 	cmp	r3, #53	; 0x35
+   10530:	ca000002 	bgt	10540 <SetGpio+0x28>
+   10534:	e59d3004 	ldr	r3, [sp, #4]
+   10538:	e3530000 	cmp	r3, #0
+   1053c:	aa000000 	bge	10544 <SetGpio+0x2c>
+                error();
+   10540:	eb0001b8 	bl	10c28 <error>
+
+        if((pinVal != 0) && (pinVal != 1))
+   10544:	e59d3000 	ldr	r3, [sp]
+   10548:	e3530000 	cmp	r3, #0
+   1054c:	0a000003 	beq	10560 <SetGpio+0x48>
+   10550:	e59d3000 	ldr	r3, [sp]
+   10554:	e3530001 	cmp	r3, #1
+   10558:	0a000000 	beq	10560 <SetGpio+0x48>
+               error(); 
+   1055c:	eb0001b1 	bl	10c28 <error>
+
+        int* gpio_addr = (int *)GetGpioAddress();
+   10560:	ebffff92 	bl	103b0 <GetGpioAddress>
+   10564:	e1a03000 	mov	r3, r0
+   10568:	e58d300c 	str	r3, [sp, #12]
+
+        gpio_addr += pin/32;
+   1056c:	e59d3004 	ldr	r3, [sp, #4]
+   10570:	e283201f 	add	r2, r3, #31
+   10574:	e3530000 	cmp	r3, #0
+   10578:	b1a03002 	movlt	r3, r2
+   1057c:	a1a03003 	movge	r3, r3
+   10580:	e1a032c3 	asr	r3, r3, #5
+   10584:	e1a03103 	lsl	r3, r3, #2
+   10588:	e59d200c 	ldr	r2, [sp, #12]
+   1058c:	e0823003 	add	r3, r2, r3
+   10590:	e58d300c 	str	r3, [sp, #12]
+        
+        int bitValue;
+        bitValue = 1 << (pin%32);
+   10594:	e59d2004 	ldr	r2, [sp, #4]
+   10598:	e1a03fc2 	asr	r3, r2, #31
+   1059c:	e1a03da3 	lsr	r3, r3, #27
+   105a0:	e0822003 	add	r2, r2, r3
+   105a4:	e202201f 	and	r2, r2, #31
+   105a8:	e0633002 	rsb	r3, r3, r2
+   105ac:	e1a02003 	mov	r2, r3
+   105b0:	e3a03001 	mov	r3, #1
+   105b4:	e1a03213 	lsl	r3, r3, r2
+   105b8:	e58d3008 	str	r3, [sp, #8]
+
+        if (pinVal == 0) {
+   105bc:	e59d3000 	ldr	r3, [sp]
+   105c0:	e3530000 	cmp	r3, #0
+   105c4:	1a000004 	bne	105dc <SetGpio+0xc4>
+                *(gpio_addr+CLR_OFFSET) = bitValue;   /* Turn off pin */
+   105c8:	e59d300c 	ldr	r3, [sp, #12]
+   105cc:	e2833028 	add	r3, r3, #40	; 0x28
+   105d0:	e59d2008 	ldr	r2, [sp, #8]
+   105d4:	e5832000 	str	r2, [r3]
+   105d8:	ea000003 	b	105ec <SetGpio+0xd4>
+        } else {        
+                *(gpio_addr+SET_OFFSET) = bitValue;   /* Turn on pin */
+   105dc:	e59d300c 	ldr	r3, [sp, #12]
+   105e0:	e283301c 	add	r3, r3, #28
+   105e4:	e59d2008 	ldr	r2, [sp, #8]
+   105e8:	e5832000 	str	r2, [r3]
+        }
+         
+        return;
+   105ec:	e1a00000 	nop			; (mov r0, r0)
+}
+   105f0:	e28dd014 	add	sp, sp, #20
+   105f4:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+
+000105f8 <SetPullUpDn>:
+ *  pud: PUD_DOWN or PUD_UP
+ *  
+ *  Note: GPIO pin 2,3 have physical pull-up resistor attach to them, set pull-down 
+ *  resistor on those pins won't work.
+ */
+void SetPullUpDn(int pin, int pud) {
+   105f8:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   105fc:	e24dd014 	sub	sp, sp, #20
+   10600:	e58d0004 	str	r0, [sp, #4]
+   10604:	e58d1000 	str	r1, [sp]
+        int* gpio_addr = (int *)GetGpioAddress();
+   10608:	ebffff68 	bl	103b0 <GetGpioAddress>
+   1060c:	e1a03000 	mov	r3, r0
+   10610:	e58d300c 	str	r3, [sp, #12]
+        
+        /* 1. Write to GPPUD(GPIO Pull-Up/Down Register) */
+        if (pud == PUD_DOWN)
+   10614:	e59d3000 	ldr	r3, [sp]
+   10618:	e3530001 	cmp	r3, #1
+   1061c:	1a000008 	bne	10644 <SetPullUpDn+0x4c>
+                *(gpio_addr+GPPUD_OFFSET) = (*(gpio_addr+GPPUD_OFFSET) & ~3) | PUD_DOWN;
+   10620:	e59d300c 	ldr	r3, [sp, #12]
+   10624:	e2833094 	add	r3, r3, #148	; 0x94
+   10628:	e59d200c 	ldr	r2, [sp, #12]
+   1062c:	e2822094 	add	r2, r2, #148	; 0x94
+   10630:	e5922000 	ldr	r2, [r2]
+   10634:	e3c22003 	bic	r2, r2, #3
+   10638:	e3822001 	orr	r2, r2, #1
+   1063c:	e5832000 	str	r2, [r3]
+   10640:	ea000012 	b	10690 <SetPullUpDn+0x98>
+        else if (pud == PUD_UP)
+   10644:	e59d3000 	ldr	r3, [sp]
+   10648:	e3530002 	cmp	r3, #2
+   1064c:	1a000008 	bne	10674 <SetPullUpDn+0x7c>
+                *(gpio_addr+GPPUD_OFFSET) = (*(gpio_addr+GPPUD_OFFSET) & ~3) | PUD_UP;
+   10650:	e59d300c 	ldr	r3, [sp, #12]
+   10654:	e2833094 	add	r3, r3, #148	; 0x94
+   10658:	e59d200c 	ldr	r2, [sp, #12]
+   1065c:	e2822094 	add	r2, r2, #148	; 0x94
+   10660:	e5922000 	ldr	r2, [r2]
+   10664:	e3c22003 	bic	r2, r2, #3
+   10668:	e3822002 	orr	r2, r2, #2
+   1066c:	e5832000 	str	r2, [r3]
+   10670:	ea000006 	b	10690 <SetPullUpDn+0x98>
+        else    /* pud == PUD_OFF */
+                *(gpio_addr+GPPUD_OFFSET) &= ~3;
+   10674:	e59d300c 	ldr	r3, [sp, #12]
+   10678:	e2833094 	add	r3, r3, #148	; 0x94
+   1067c:	e59d200c 	ldr	r2, [sp, #12]
+   10680:	e2822094 	add	r2, r2, #148	; 0x94
+   10684:	e5922000 	ldr	r2, [r2]
+   10688:	e3c22003 	bic	r2, r2, #3
+   1068c:	e5832000 	str	r2, [r3]
+
+        /* 2. Wait 150 cycles */         
+        short_wait();
+   10690:	ebffff39 	bl	1037c <short_wait>
+        
+        /* 3. Write to GPPUDCLK(GPIO Pull-Up/Down Clock Register) */
+        int clk_offset = GPPUDCLK_OFFSET + (pin/32);
+   10694:	e59d3004 	ldr	r3, [sp, #4]
+   10698:	e283201f 	add	r2, r3, #31
+   1069c:	e3530000 	cmp	r3, #0
+   106a0:	b1a03002 	movlt	r3, r2
+   106a4:	a1a03003 	movge	r3, r3
+   106a8:	e1a032c3 	asr	r3, r3, #5
+   106ac:	e2833026 	add	r3, r3, #38	; 0x26
+   106b0:	e58d3008 	str	r3, [sp, #8]
+        *(gpio_addr+clk_offset) = 1 << (pin%32);
+   106b4:	e59d3008 	ldr	r3, [sp, #8]
+   106b8:	e1a03103 	lsl	r3, r3, #2
+   106bc:	e59d200c 	ldr	r2, [sp, #12]
+   106c0:	e0821003 	add	r1, r2, r3
+   106c4:	e59d2004 	ldr	r2, [sp, #4]
+   106c8:	e1a03fc2 	asr	r3, r2, #31
+   106cc:	e1a03da3 	lsr	r3, r3, #27
+   106d0:	e0822003 	add	r2, r2, r3
+   106d4:	e202201f 	and	r2, r2, #31
+   106d8:	e0633002 	rsb	r3, r3, r2
+   106dc:	e1a02003 	mov	r2, r3
+   106e0:	e3a03001 	mov	r3, #1
+   106e4:	e1a03213 	lsl	r3, r3, r2
+   106e8:	e5813000 	str	r3, [r1]
+
+        /* 4. Wait 150 cycles*/     
+        short_wait();
+   106ec:	ebffff22 	bl	1037c <short_wait>
+
+        /* 5. Write to GPPUD to remove the control signal */
+        *(gpio_addr+GPPUD_OFFSET) &= ~3;
+   106f0:	e59d300c 	ldr	r3, [sp, #12]
+   106f4:	e2833094 	add	r3, r3, #148	; 0x94
+   106f8:	e59d200c 	ldr	r2, [sp, #12]
+   106fc:	e2822094 	add	r2, r2, #148	; 0x94
+   10700:	e5922000 	ldr	r2, [r2]
+   10704:	e3c22003 	bic	r2, r2, #3
+   10708:	e5832000 	str	r2, [r3]
+
+        /* 6. Write to GPPUDCLK to remove the clock */
+        *(gpio_addr+clk_offset) = 0;
+   1070c:	e59d3008 	ldr	r3, [sp, #8]
+   10710:	e1a03103 	lsl	r3, r3, #2
+   10714:	e59d200c 	ldr	r2, [sp, #12]
+   10718:	e0823003 	add	r3, r2, r3
+   1071c:	e3a02000 	mov	r2, #0
+   10720:	e5832000 	str	r2, [r3]
+} 
+   10724:	e28dd014 	add	sp, sp, #20
+   10728:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+
+0001072c <GetGpio>:
+ *  pin: GPIO pin number
+ *
+ *  Return:
+ *  GPIO pin value
+ */
+int GetGpio(int pin) {
+   1072c:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   10730:	e24dd01c 	sub	sp, sp, #28
+   10734:	e58d0004 	str	r0, [sp, #4]
+        int* gpio_addr = (int *)GetGpioAddress();
+   10738:	ebffff1c 	bl	103b0 <GetGpioAddress>
+   1073c:	e1a03000 	mov	r3, r0
+   10740:	e58d3014 	str	r3, [sp, #20]
+        int offset = GPLEV_OFFSET+(pin/32);
+   10744:	e59d3004 	ldr	r3, [sp, #4]
+   10748:	e283201f 	add	r2, r3, #31
+   1074c:	e3530000 	cmp	r3, #0
+   10750:	b1a03002 	movlt	r3, r2
+   10754:	a1a03003 	movge	r3, r3
+   10758:	e1a032c3 	asr	r3, r3, #5
+   1075c:	e283300d 	add	r3, r3, #13
+   10760:	e58d3010 	str	r3, [sp, #16]
+        int mask = (1 << pin%32);
+   10764:	e59d2004 	ldr	r2, [sp, #4]
+   10768:	e1a03fc2 	asr	r3, r2, #31
+   1076c:	e1a03da3 	lsr	r3, r3, #27
+   10770:	e0822003 	add	r2, r2, r3
+   10774:	e202201f 	and	r2, r2, #31
+   10778:	e0633002 	rsb	r3, r3, r2
+   1077c:	e1a02003 	mov	r2, r3
+   10780:	e3a03001 	mov	r3, #1
+   10784:	e1a03213 	lsl	r3, r3, r2
+   10788:	e58d300c 	str	r3, [sp, #12]
+        int value;
+        value = *(gpio_addr+offset) & mask;
+   1078c:	e59d3010 	ldr	r3, [sp, #16]
+   10790:	e1a03103 	lsl	r3, r3, #2
+   10794:	e59d2014 	ldr	r2, [sp, #20]
+   10798:	e0823003 	add	r3, r2, r3
+   1079c:	e5932000 	ldr	r2, [r3]
+   107a0:	e59d300c 	ldr	r3, [sp, #12]
+   107a4:	e0033002 	and	r3, r3, r2
+   107a8:	e58d3008 	str	r3, [sp, #8]
+        if (value)
+   107ac:	e59d3008 	ldr	r3, [sp, #8]
+   107b0:	e3530000 	cmp	r3, #0
+   107b4:	0a000001 	beq	107c0 <GetGpio+0x94>
+                return GPIO_HIGH;
+   107b8:	e3a03001 	mov	r3, #1
+   107bc:	ea000000 	b	107c4 <GetGpio+0x98>
+        else
+                return GPIO_LOW;
+   107c0:	e3a03000 	mov	r3, #0
+}
+   107c4:	e1a00003 	mov	r0, r3
+   107c8:	e28dd01c 	add	sp, sp, #28
+   107cc:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+
+000107d0 <ReadChar>:
+ *  len: Array length
+ *
+ *  Return:
+ *  -1: Error
+ */
+int ReadChar(int *buf, const int len) {
+   107d0:	e92d4010 	push	{r4, lr}
+   107d4:	e24dd010 	sub	sp, sp, #16
+   107d8:	e58d0004 	str	r0, [sp, #4]
+   107dc:	e58d1000 	str	r1, [sp]
+        int i;
+        for (i=0; i<len; i++) {
+   107e0:	e3a03000 	mov	r3, #0
+   107e4:	e58d300c 	str	r3, [sp, #12]
+   107e8:	ea000034 	b	108c0 <ReadChar+0xf0>
+                /* Check Error */
+                if (GetGpio(TOS_READ_STATUS) != MSG_IDLE) {
+   107ec:	e59f30ec 	ldr	r3, [pc, #236]	; 108e0 <ReadChar+0x110>
+   107f0:	e5933000 	ldr	r3, [r3]
+   107f4:	e1a00003 	mov	r0, r3
+   107f8:	ebffffcb 	bl	1072c <GetGpio>
+   107fc:	e1a03000 	mov	r3, r0
+   10800:	e3530000 	cmp	r3, #0
+   10804:	0a000002 	beq	10814 <ReadChar+0x44>
+                        error();
+   10808:	eb000106 	bl	10c28 <error>
+                        return -1;
+   1080c:	e3e03000 	mvn	r3, #0
+   10810:	ea00002f 	b	108d4 <ReadChar+0x104>
+                }
+                /* Wait until Terminal Status change to MSG_SENT */
+                while (GetGpio(TERMINAL_WRITE_STATUS) == MSG_IDLE)
+   10814:	ea000001 	b	10820 <ReadChar+0x50>
+                        Wait(10);
+   10818:	e3a0000a 	mov	r0, #10
+   1081c:	eb000518 	bl	11c84 <Wait>
+                if (GetGpio(TOS_READ_STATUS) != MSG_IDLE) {
+                        error();
+                        return -1;
+                }
+                /* Wait until Terminal Status change to MSG_SENT */
+                while (GetGpio(TERMINAL_WRITE_STATUS) == MSG_IDLE)
+   10820:	e59f30bc 	ldr	r3, [pc, #188]	; 108e4 <ReadChar+0x114>
+   10824:	e5933000 	ldr	r3, [r3]
+   10828:	e1a00003 	mov	r0, r3
+   1082c:	ebffffbe 	bl	1072c <GetGpio>
+   10830:	e1a03000 	mov	r3, r0
+   10834:	e3530000 	cmp	r3, #0
+   10838:	0afffff6 	beq	10818 <ReadChar+0x48>
+                        Wait(10);
+
+                /* Read bits */
+                *(buf+i) = GetGpio(TERMINAL_INPUT_BITS);
+   1083c:	e59d300c 	ldr	r3, [sp, #12]
+   10840:	e1a03103 	lsl	r3, r3, #2
+   10844:	e59d2004 	ldr	r2, [sp, #4]
+   10848:	e0824003 	add	r4, r2, r3
+   1084c:	e59f3094 	ldr	r3, [pc, #148]	; 108e8 <ReadChar+0x118>
+   10850:	e5933000 	ldr	r3, [r3]
+   10854:	e1a00003 	mov	r0, r3
+   10858:	ebffffb3 	bl	1072c <GetGpio>
+   1085c:	e1a03000 	mov	r3, r0
+   10860:	e5843000 	str	r3, [r4]
+                SetGpio(TOS_READ_STATUS, MSG_RECEIVED);
+   10864:	e59f3074 	ldr	r3, [pc, #116]	; 108e0 <ReadChar+0x110>
+   10868:	e5933000 	ldr	r3, [r3]
+   1086c:	e1a00003 	mov	r0, r3
+   10870:	e3a01001 	mov	r1, #1
+   10874:	ebffff27 	bl	10518 <SetGpio>
+                /* Make sure terminal side is finished */
+                while (GetGpio(TERMINAL_WRITE_STATUS) != MSG_IDLE)
+   10878:	ea000001 	b	10884 <ReadChar+0xb4>
+                        Wait(10);
+   1087c:	e3a0000a 	mov	r0, #10
+   10880:	eb0004ff 	bl	11c84 <Wait>
+
+                /* Read bits */
+                *(buf+i) = GetGpio(TERMINAL_INPUT_BITS);
+                SetGpio(TOS_READ_STATUS, MSG_RECEIVED);
+                /* Make sure terminal side is finished */
+                while (GetGpio(TERMINAL_WRITE_STATUS) != MSG_IDLE)
+   10884:	e59f3058 	ldr	r3, [pc, #88]	; 108e4 <ReadChar+0x114>
+   10888:	e5933000 	ldr	r3, [r3]
+   1088c:	e1a00003 	mov	r0, r3
+   10890:	ebffffa5 	bl	1072c <GetGpio>
+   10894:	e1a03000 	mov	r3, r0
+   10898:	e3530000 	cmp	r3, #0
+   1089c:	1afffff6 	bne	1087c <ReadChar+0xac>
+                        Wait(10);
+                SetGpio(TOS_READ_STATUS, MSG_IDLE);
+   108a0:	e59f3038 	ldr	r3, [pc, #56]	; 108e0 <ReadChar+0x110>
+   108a4:	e5933000 	ldr	r3, [r3]
+   108a8:	e1a00003 	mov	r0, r3
+   108ac:	e3a01000 	mov	r1, #0
+   108b0:	ebffff18 	bl	10518 <SetGpio>
+ *  Return:
+ *  -1: Error
+ */
+int ReadChar(int *buf, const int len) {
+        int i;
+        for (i=0; i<len; i++) {
+   108b4:	e59d300c 	ldr	r3, [sp, #12]
+   108b8:	e2833001 	add	r3, r3, #1
+   108bc:	e58d300c 	str	r3, [sp, #12]
+   108c0:	e59d200c 	ldr	r2, [sp, #12]
+   108c4:	e59d3000 	ldr	r3, [sp]
+   108c8:	e1520003 	cmp	r2, r3
+   108cc:	baffffc6 	blt	107ec <ReadChar+0x1c>
+                /* Make sure terminal side is finished */
+                while (GetGpio(TERMINAL_WRITE_STATUS) != MSG_IDLE)
+                        Wait(10);
+                SetGpio(TOS_READ_STATUS, MSG_IDLE);
+        }
+        return 0;
+   108d0:	e3a03000 	mov	r3, #0
+}
+   108d4:	e1a00003 	mov	r0, r3
+   108d8:	e28dd010 	add	sp, sp, #16
+   108dc:	e8bd8010 	pop	{r4, pc}
+   108e0:	0001a16c 	.word	0x0001a16c
+   108e4:	0001a15c 	.word	0x0001a15c
+   108e8:	0001a158 	.word	0x0001a158
+
+000108ec <WriteChar>:
+ *  len: Array length
+ *
+ *  Return:
+ *  -1: Error
+ */
+int WriteChar(int *buf, const int len) {
+   108ec:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   108f0:	e24dd014 	sub	sp, sp, #20
+   108f4:	e58d0004 	str	r0, [sp, #4]
+   108f8:	e58d1000 	str	r1, [sp]
+        int i;
+        for (i=0; i<len; i++) {
+   108fc:	e3a03000 	mov	r3, #0
+   10900:	e58d300c 	str	r3, [sp, #12]
+   10904:	ea000034 	b	109dc <WriteChar+0xf0>
+                /* Check error */
+                if (GetGpio(TOS_WRITE_STATUS) != MSG_IDLE) {
+   10908:	e59f30ec 	ldr	r3, [pc, #236]	; 109fc <WriteChar+0x110>
+   1090c:	e5933000 	ldr	r3, [r3]
+   10910:	e1a00003 	mov	r0, r3
+   10914:	ebffff84 	bl	1072c <GetGpio>
+   10918:	e1a03000 	mov	r3, r0
+   1091c:	e3530000 	cmp	r3, #0
+   10920:	0a000002 	beq	10930 <WriteChar+0x44>
+                        error();
+   10924:	eb0000bf 	bl	10c28 <error>
+                        return -1;
+   10928:	e3e03000 	mvn	r3, #0
+   1092c:	ea00002f 	b	109f0 <WriteChar+0x104>
+                }
+                /* Make sure terminal side is ready */
+                while (GetGpio(TERMINAL_READ_STATUS) != MSG_IDLE)
+   10930:	ea000001 	b	1093c <WriteChar+0x50>
+                        Wait(10);
+   10934:	e3a0000a 	mov	r0, #10
+   10938:	eb0004d1 	bl	11c84 <Wait>
+                if (GetGpio(TOS_WRITE_STATUS) != MSG_IDLE) {
+                        error();
+                        return -1;
+                }
+                /* Make sure terminal side is ready */
+                while (GetGpio(TERMINAL_READ_STATUS) != MSG_IDLE)
+   1093c:	e59f30bc 	ldr	r3, [pc, #188]	; 10a00 <WriteChar+0x114>
+   10940:	e5933000 	ldr	r3, [r3]
+   10944:	e1a00003 	mov	r0, r3
+   10948:	ebffff77 	bl	1072c <GetGpio>
+   1094c:	e1a03000 	mov	r3, r0
+   10950:	e3530000 	cmp	r3, #0
+   10954:	1afffff6 	bne	10934 <WriteChar+0x48>
+                        Wait(10);
+                SetGpio(TOS_OUTPUT_BITS, *(buf+i));
+   10958:	e59f30a4 	ldr	r3, [pc, #164]	; 10a04 <WriteChar+0x118>
+   1095c:	e5931000 	ldr	r1, [r3]
+   10960:	e59d300c 	ldr	r3, [sp, #12]
+   10964:	e1a03103 	lsl	r3, r3, #2
+   10968:	e59d2004 	ldr	r2, [sp, #4]
+   1096c:	e0823003 	add	r3, r2, r3
+   10970:	e5933000 	ldr	r3, [r3]
+   10974:	e1a00001 	mov	r0, r1
+   10978:	e1a01003 	mov	r1, r3
+   1097c:	ebfffee5 	bl	10518 <SetGpio>
+                SetGpio(TOS_WRITE_STATUS, MSG_SENT);
+   10980:	e59f3074 	ldr	r3, [pc, #116]	; 109fc <WriteChar+0x110>
+   10984:	e5933000 	ldr	r3, [r3]
+   10988:	e1a00003 	mov	r0, r3
+   1098c:	e3a01001 	mov	r1, #1
+   10990:	ebfffee0 	bl	10518 <SetGpio>
+                /* Wait terminal read msg */
+                while (GetGpio(TERMINAL_READ_STATUS) != MSG_RECEIVED)
+   10994:	ea000001 	b	109a0 <WriteChar+0xb4>
+                        Wait(10);
+   10998:	e3a0000a 	mov	r0, #10
+   1099c:	eb0004b8 	bl	11c84 <Wait>
+                while (GetGpio(TERMINAL_READ_STATUS) != MSG_IDLE)
+                        Wait(10);
+                SetGpio(TOS_OUTPUT_BITS, *(buf+i));
+                SetGpio(TOS_WRITE_STATUS, MSG_SENT);
+                /* Wait terminal read msg */
+                while (GetGpio(TERMINAL_READ_STATUS) != MSG_RECEIVED)
+   109a0:	e59f3058 	ldr	r3, [pc, #88]	; 10a00 <WriteChar+0x114>
+   109a4:	e5933000 	ldr	r3, [r3]
+   109a8:	e1a00003 	mov	r0, r3
+   109ac:	ebffff5e 	bl	1072c <GetGpio>
+   109b0:	e1a03000 	mov	r3, r0
+   109b4:	e3530001 	cmp	r3, #1
+   109b8:	1afffff6 	bne	10998 <WriteChar+0xac>
+                        Wait(10);
+                SetGpio(TOS_WRITE_STATUS, MSG_IDLE);
+   109bc:	e59f3038 	ldr	r3, [pc, #56]	; 109fc <WriteChar+0x110>
+   109c0:	e5933000 	ldr	r3, [r3]
+   109c4:	e1a00003 	mov	r0, r3
+   109c8:	e3a01000 	mov	r1, #0
+   109cc:	ebfffed1 	bl	10518 <SetGpio>
+ *  Return:
+ *  -1: Error
+ */
+int WriteChar(int *buf, const int len) {
+        int i;
+        for (i=0; i<len; i++) {
+   109d0:	e59d300c 	ldr	r3, [sp, #12]
+   109d4:	e2833001 	add	r3, r3, #1
+   109d8:	e58d300c 	str	r3, [sp, #12]
+   109dc:	e59d200c 	ldr	r2, [sp, #12]
+   109e0:	e59d3000 	ldr	r3, [sp]
+   109e4:	e1520003 	cmp	r2, r3
+   109e8:	baffffc6 	blt	10908 <WriteChar+0x1c>
+                while (GetGpio(TERMINAL_READ_STATUS) != MSG_RECEIVED)
+                        Wait(10);
+                SetGpio(TOS_WRITE_STATUS, MSG_IDLE);
+
+        }
+        return 0;
+   109ec:	e3a03000 	mov	r3, #0
+}
+   109f0:	e1a00003 	mov	r0, r3
+   109f4:	e28dd014 	add	sp, sp, #20
+   109f8:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+   109fc:	0001a168 	.word	0x0001a168
+   10a00:	0001a160 	.word	0x0001a160
+   10a04:	0001a164 	.word	0x0001a164
+
+00010a08 <GpioInputSetup>:
+ *  Parameters:
+ *  terminal_bits: pin to receive bits from terminal
+ *  terminal_read: pin to get terminal read status
+ *  terminal_write: pin to get terminal write status
+ */
+void GpioInputSetup(int terminal_bits, int terminal_read, int terminal_write) {
+   10a08:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   10a0c:	e24dd014 	sub	sp, sp, #20
+   10a10:	e58d000c 	str	r0, [sp, #12]
+   10a14:	e58d1008 	str	r1, [sp, #8]
+   10a18:	e58d2004 	str	r2, [sp, #4]
+        /* Setup Input (Follow the instruction in the manual)*/
+        SetPullUpDn(terminal_bits, PUD_DOWN);
+   10a1c:	e59d000c 	ldr	r0, [sp, #12]
+   10a20:	e3a01001 	mov	r1, #1
+   10a24:	ebfffef3 	bl	105f8 <SetPullUpDn>
+        SetGpioFunction(terminal_bits, GPIO_INPUT);                /* Enable GPIO Input Pin */
+   10a28:	e59d000c 	ldr	r0, [sp, #12]
+   10a2c:	e3a01000 	mov	r1, #0
+   10a30:	ebfffe62 	bl	103c0 <SetGpioFunction>
+        SetPullUpDn(terminal_read, PUD_DOWN);
+   10a34:	e59d0008 	ldr	r0, [sp, #8]
+   10a38:	e3a01001 	mov	r1, #1
+   10a3c:	ebfffeed 	bl	105f8 <SetPullUpDn>
+        SetGpioFunction(terminal_read, GPIO_INPUT);
+   10a40:	e59d0008 	ldr	r0, [sp, #8]
+   10a44:	e3a01000 	mov	r1, #0
+   10a48:	ebfffe5c 	bl	103c0 <SetGpioFunction>
+        SetPullUpDn(terminal_write, PUD_DOWN);
+   10a4c:	e59d0004 	ldr	r0, [sp, #4]
+   10a50:	e3a01001 	mov	r1, #1
+   10a54:	ebfffee7 	bl	105f8 <SetPullUpDn>
+        SetGpioFunction(terminal_write, GPIO_INPUT);
+   10a58:	e59d0004 	ldr	r0, [sp, #4]
+   10a5c:	e3a01000 	mov	r1, #0
+   10a60:	ebfffe56 	bl	103c0 <SetGpioFunction>
+        /* Setup Channel */
+        TERMINAL_INPUT_BITS   = terminal_bits;
+   10a64:	e59f2024 	ldr	r2, [pc, #36]	; 10a90 <GpioInputSetup+0x88>
+   10a68:	e59d300c 	ldr	r3, [sp, #12]
+   10a6c:	e5823000 	str	r3, [r2]
+        TERMINAL_READ_STATUS  = terminal_read;
+   10a70:	e59f201c 	ldr	r2, [pc, #28]	; 10a94 <GpioInputSetup+0x8c>
+   10a74:	e59d3008 	ldr	r3, [sp, #8]
+   10a78:	e5823000 	str	r3, [r2]
+        TERMINAL_WRITE_STATUS = terminal_write;
+   10a7c:	e59f2014 	ldr	r2, [pc, #20]	; 10a98 <GpioInputSetup+0x90>
+   10a80:	e59d3004 	ldr	r3, [sp, #4]
+   10a84:	e5823000 	str	r3, [r2]
+}
+   10a88:	e28dd014 	add	sp, sp, #20
+   10a8c:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+   10a90:	0001a158 	.word	0x0001a158
+   10a94:	0001a160 	.word	0x0001a160
+   10a98:	0001a15c 	.word	0x0001a15c
+
+00010a9c <GpioOutputSetup>:
+ *  Parameters:
+ *  tos_bits: pin to send bits to terminal
+ *  tos_read: pin to indicate TOS read status
+ *  tos_write: pin to indicate TOS write status
+ */
+void GpioOutputSetup(int tos_bits, int tos_read, int tos_write) {
+   10a9c:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   10aa0:	e24dd014 	sub	sp, sp, #20
+   10aa4:	e58d000c 	str	r0, [sp, #12]
+   10aa8:	e58d1008 	str	r1, [sp, #8]
+   10aac:	e58d2004 	str	r2, [sp, #4]
+        /* Setup Output */
+        SetGpioFunction(tos_bits, GPIO_OUTPUT);         /* Enable GPIO Output Pin */
+   10ab0:	e59d000c 	ldr	r0, [sp, #12]
+   10ab4:	e3a01001 	mov	r1, #1
+   10ab8:	ebfffe40 	bl	103c0 <SetGpioFunction>
+        SetGpio(tos_bits, GPIO_LOW);                    /* Initial output low voltage */
+   10abc:	e59d000c 	ldr	r0, [sp, #12]
+   10ac0:	e3a01000 	mov	r1, #0
+   10ac4:	ebfffe93 	bl	10518 <SetGpio>
+        SetGpioFunction(tos_read, GPIO_OUTPUT);
+   10ac8:	e59d0008 	ldr	r0, [sp, #8]
+   10acc:	e3a01001 	mov	r1, #1
+   10ad0:	ebfffe3a 	bl	103c0 <SetGpioFunction>
+        SetGpio(tos_read, GPIO_LOW);
+   10ad4:	e59d0008 	ldr	r0, [sp, #8]
+   10ad8:	e3a01000 	mov	r1, #0
+   10adc:	ebfffe8d 	bl	10518 <SetGpio>
+        SetGpioFunction(tos_write, GPIO_OUTPUT);
+   10ae0:	e59d0004 	ldr	r0, [sp, #4]
+   10ae4:	e3a01001 	mov	r1, #1
+   10ae8:	ebfffe34 	bl	103c0 <SetGpioFunction>
+        SetGpio(tos_write, GPIO_LOW);
+   10aec:	e59d0004 	ldr	r0, [sp, #4]
+   10af0:	e3a01000 	mov	r1, #0
+   10af4:	ebfffe87 	bl	10518 <SetGpio>
+        TOS_OUTPUT_BITS       = tos_bits;
+   10af8:	e59f2024 	ldr	r2, [pc, #36]	; 10b24 <GpioOutputSetup+0x88>
+   10afc:	e59d300c 	ldr	r3, [sp, #12]
+   10b00:	e5823000 	str	r3, [r2]
+        TOS_READ_STATUS       = tos_read;
+   10b04:	e59f201c 	ldr	r2, [pc, #28]	; 10b28 <GpioOutputSetup+0x8c>
+   10b08:	e59d3008 	ldr	r3, [sp, #8]
+   10b0c:	e5823000 	str	r3, [r2]
+        TOS_WRITE_STATUS      = tos_write;
+   10b10:	e59f2014 	ldr	r2, [pc, #20]	; 10b2c <GpioOutputSetup+0x90>
+   10b14:	e59d3004 	ldr	r3, [sp, #4]
+   10b18:	e5823000 	str	r3, [r2]
+}
+   10b1c:	e28dd014 	add	sp, sp, #20
+   10b20:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+   10b24:	0001a164 	.word	0x0001a164
+   10b28:	0001a16c 	.word	0x0001a16c
+   10b2c:	0001a168 	.word	0x0001a168
+
+00010b30 <WriteString>:
+ *
+ *  Return:
+ *  -1: Error
+ *  0: Success 
+ */
+int WriteString(char *str) {
+   10b30:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   10b34:	e24dd034 	sub	sp, sp, #52	; 0x34
+   10b38:	e58d0004 	str	r0, [sp, #4]
+        int value[BIT_LENGTH], ret;
+        char* ptr = str;
+   10b3c:	e59d3004 	ldr	r3, [sp, #4]
+   10b40:	e58d302c 	str	r3, [sp, #44]	; 0x2c
+        while(*ptr != '\0') {
+   10b44:	ea000014 	b	10b9c <WriteString+0x6c>
+                charToBin(*ptr, value, BIT_LENGTH);
+   10b48:	e59d302c 	ldr	r3, [sp, #44]	; 0x2c
+   10b4c:	e5d32000 	ldrb	r2, [r3]
+   10b50:	e28d3008 	add	r3, sp, #8
+   10b54:	e1a00002 	mov	r0, r2
+   10b58:	e1a01003 	mov	r1, r3
+   10b5c:	e3a02008 	mov	r2, #8
+   10b60:	eb00017e 	bl	11160 <charToBin>
+                ret = WriteChar(value, BIT_LENGTH);
+   10b64:	e28d3008 	add	r3, sp, #8
+   10b68:	e1a00003 	mov	r0, r3
+   10b6c:	e3a01008 	mov	r1, #8
+   10b70:	ebffff5d 	bl	108ec <WriteChar>
+   10b74:	e58d0028 	str	r0, [sp, #40]	; 0x28
+                if (ret == -1) {
+   10b78:	e59d3028 	ldr	r3, [sp, #40]	; 0x28
+   10b7c:	e3730001 	cmn	r3, #1
+   10b80:	1a000002 	bne	10b90 <WriteString+0x60>
+                        error();
+   10b84:	eb000027 	bl	10c28 <error>
+                        return -1;
+   10b88:	e3e03000 	mvn	r3, #0
+   10b8c:	ea000017 	b	10bf0 <WriteString+0xc0>
+                }
+                ptr += 1;
+   10b90:	e59d302c 	ldr	r3, [sp, #44]	; 0x2c
+   10b94:	e2833001 	add	r3, r3, #1
+   10b98:	e58d302c 	str	r3, [sp, #44]	; 0x2c
+ *  0: Success 
+ */
+int WriteString(char *str) {
+        int value[BIT_LENGTH], ret;
+        char* ptr = str;
+        while(*ptr != '\0') {
+   10b9c:	e59d302c 	ldr	r3, [sp, #44]	; 0x2c
+   10ba0:	e5d33000 	ldrb	r3, [r3]
+   10ba4:	e3530000 	cmp	r3, #0
+   10ba8:	1affffe6 	bne	10b48 <WriteString+0x18>
+                        error();
+                        return -1;
+                }
+                ptr += 1;
+        }
+        charToBin('\0', value, BIT_LENGTH);
+   10bac:	e28d3008 	add	r3, sp, #8
+   10bb0:	e3a00000 	mov	r0, #0
+   10bb4:	e1a01003 	mov	r1, r3
+   10bb8:	e3a02008 	mov	r2, #8
+   10bbc:	eb000167 	bl	11160 <charToBin>
+        ret = WriteChar(value, BIT_LENGTH);
+   10bc0:	e28d3008 	add	r3, sp, #8
+   10bc4:	e1a00003 	mov	r0, r3
+   10bc8:	e3a01008 	mov	r1, #8
+   10bcc:	ebffff46 	bl	108ec <WriteChar>
+   10bd0:	e58d0028 	str	r0, [sp, #40]	; 0x28
+        if (ret == -1) {
+   10bd4:	e59d3028 	ldr	r3, [sp, #40]	; 0x28
+   10bd8:	e3730001 	cmn	r3, #1
+   10bdc:	1a000002 	bne	10bec <WriteString+0xbc>
+                error();
+   10be0:	eb000010 	bl	10c28 <error>
+                return -1;
+   10be4:	e3e03000 	mvn	r3, #0
+   10be8:	ea000000 	b	10bf0 <WriteString+0xc0>
+        }
+        return 0;
+   10bec:	e3a03000 	mov	r3, #0
+}
+   10bf0:	e1a00003 	mov	r0, r3
+   10bf4:	e28dd034 	add	sp, sp, #52	; 0x34
+   10bf8:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+
+00010bfc <debug>:
+/*
+ * debug()
+ * -------
+ *  Turn on the ACT LED, won't return
+ */
+void debug() {
+   10bfc:	e92d4008 	push	{r3, lr}
+        while(1) {
+                SetGpioFunction(16, 1);
+   10c00:	e3a00010 	mov	r0, #16
+   10c04:	e3a01001 	mov	r1, #1
+   10c08:	ebfffdec 	bl	103c0 <SetGpioFunction>
+                SetGpio(16, 0);
+   10c0c:	e3a00010 	mov	r0, #16
+   10c10:	e3a01000 	mov	r1, #0
+   10c14:	ebfffe3f 	bl	10518 <SetGpio>
+                Wait(250000);
+   10c18:	e59f0004 	ldr	r0, [pc, #4]	; 10c24 <debug+0x28>
+   10c1c:	eb000418 	bl	11c84 <Wait>
+        }
+   10c20:	eafffff6 	b	10c00 <debug+0x4>
+   10c24:	0003d090 	.word	0x0003d090
+
+00010c28 <error>:
+/*
+ * error()
+ * -------
+ *  TODO Turn on a red LED, won't return
+ */
+void error() {
+   10c28:	e92d4008 	push	{r3, lr}
+        while(1) {
+                SetGpioFunction(16, 1);
+   10c2c:	e3a00010 	mov	r0, #16
+   10c30:	e3a01001 	mov	r1, #1
+   10c34:	ebfffde1 	bl	103c0 <SetGpioFunction>
+                SetGpio(16, 0);
+   10c38:	e3a00010 	mov	r0, #16
+   10c3c:	e3a01000 	mov	r1, #0
+   10c40:	ebfffe34 	bl	10518 <SetGpio>
+                Wait(100000);
+   10c44:	e59f0018 	ldr	r0, [pc, #24]	; 10c64 <error+0x3c>
+   10c48:	eb00040d 	bl	11c84 <Wait>
+                SetGpio(16, 1);
+   10c4c:	e3a00010 	mov	r0, #16
+   10c50:	e3a01001 	mov	r1, #1
+   10c54:	ebfffe2f 	bl	10518 <SetGpio>
+                Wait(100000);
+   10c58:	e59f0004 	ldr	r0, [pc, #4]	; 10c64 <error+0x3c>
+   10c5c:	eb000408 	bl	11c84 <Wait>
+        }
+   10c60:	eafffff1 	b	10c2c <error+0x4>
+   10c64:	000186a0 	.word	0x000186a0
+
+00010c68 <test_1_foo>:
+        main();
+}
+*/
+
+void test_1_foo() {
+    asm("nop");
+   10c68:	e320f000 	nop	{0}
+}
+   10c6c:	e12fff1e 	bx	lr
+
+00010c70 <test_process_1>:
+void test_process_1(PROCESS self, PARAM param) {
+   10c70:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   10c74:	e24dd014 	sub	sp, sp, #20
+   10c78:	e58d0004 	str	r0, [sp, #4]
+   10c7c:	e58d1000 	str	r1, [sp]
+        char* test_str = "This is process A";
+   10c80:	e59f3008 	ldr	r3, [pc, #8]	; 10c90 <test_process_1+0x20>
+   10c84:	e58d300c 	str	r3, [sp, #12]
+        int ret;
+        while (1) {
+            test_1_foo();
+   10c88:	ebfffff6 	bl	10c68 <test_1_foo>
+        }
+   10c8c:	eafffffd 	b	10c88 <test_process_1+0x18>
+   10c90:	000120d0 	.word	0x000120d0
+
+00010c94 <test_2_foo>:
+                resign();
+        }*/
+}
+
+void test_2_foo() {
+    asm("nop");
+   10c94:	e320f000 	nop	{0}
+}
+   10c98:	e12fff1e 	bx	lr
+
+00010c9c <test_process_2>:
+
+void test_process_2(PROCESS self, PARAM param) {
+   10c9c:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   10ca0:	e24dd014 	sub	sp, sp, #20
+   10ca4:	e58d0004 	str	r0, [sp, #4]
+   10ca8:	e58d1000 	str	r1, [sp]
+        char* test_str = "This is process B";
+   10cac:	e59f3008 	ldr	r3, [pc, #8]	; 10cbc <test_process_2+0x20>
+   10cb0:	e58d300c 	str	r3, [sp, #12]
+        int ret;
+        while(1) {
+            test_2_foo();
+   10cb4:	ebfffff6 	bl	10c94 <test_2_foo>
+        }
+   10cb8:	eafffffd 	b	10cb4 <test_process_2+0x18>
+   10cbc:	000120e4 	.word	0x000120e4
+
+00010cc0 <main>:
+                }
+                resign();
+        }*/
+}
+
+int main(){
+   10cc0:	e92d4008 	push	{r3, lr}
+        /* TERMINAL_BITS: 25, TERMINAL_READ: 7, TERMINAL_WRITE: 8 */
+        //GpioInputSetup(25, 7, 8);
+        /* TOS_BITS: 14, TOS_READ: 18, TOS_WRITE: 15 */
+        //GpioOutputSetup(14, 18, 15);
+
+        init_process();
+   10cc4:	eb0000fd 	bl	110c0 <init_process>
+        //WriteString("Init Process Done");
+        init_dispatcher();
+   10cc8:	ebfffd92 	bl	10318 <init_dispatcher>
+        //WriteString("Init Dispatcher Done");
+        init_interrupts();
+   10ccc:	eb000499 	bl	11f38 <init_interrupts>
+        create_process(test_process_1, 5, 42, "TEST PROCESS A");
+   10cd0:	e59f0024 	ldr	r0, [pc, #36]	; 10cfc <main+0x3c>
+   10cd4:	e3a01005 	mov	r1, #5
+   10cd8:	e3a0202a 	mov	r2, #42	; 0x2a
+   10cdc:	e59f301c 	ldr	r3, [pc, #28]	; 10d00 <main+0x40>
+   10ce0:	eb000044 	bl	10df8 <create_process>
+        create_process(test_process_2, 5, 42, "TEST PROCESS B");
+   10ce4:	e59f0018 	ldr	r0, [pc, #24]	; 10d04 <main+0x44>
+   10ce8:	e3a01005 	mov	r1, #5
+   10cec:	e3a0202a 	mov	r2, #42	; 0x2a
+   10cf0:	e59f3010 	ldr	r3, [pc, #16]	; 10d08 <main+0x48>
+   10cf4:	eb00003f 	bl	10df8 <create_process>
+        while(1){
+        }
+   10cf8:	eafffffe 	b	10cf8 <main+0x38>
+   10cfc:	00010c70 	.word	0x00010c70
+   10d00:	000120f8 	.word	0x000120f8
+   10d04:	00010c9c 	.word	0x00010c9c
+   10d08:	00012108 	.word	0x00012108
+
+00010d0c <poke_b>:
+ *  Paramters:
+ *  addr: memory address
+ *  value: value to store
+ */
+void poke_b (MEM_ADDR addr, BYTE value)
+{
+   10d0c:	e24dd010 	sub	sp, sp, #16
+   10d10:	e58d0004 	str	r0, [sp, #4]
+   10d14:	e1a03001 	mov	r3, r1
+   10d18:	e5cd3003 	strb	r3, [sp, #3]
+        unsigned char *ptr = (unsigned char *) addr;
+   10d1c:	e59d3004 	ldr	r3, [sp, #4]
+   10d20:	e58d300c 	str	r3, [sp, #12]
+        *ptr = value;
+   10d24:	e59d300c 	ldr	r3, [sp, #12]
+   10d28:	e5dd2003 	ldrb	r2, [sp, #3]
+   10d2c:	e5c32000 	strb	r2, [r3]
+}
+   10d30:	e28dd010 	add	sp, sp, #16
+   10d34:	e12fff1e 	bx	lr
+
+00010d38 <poke_w>:
+ *  Paramters:
+ *  addr: memory address
+ *  value: value to store
+ */
+void poke_w (MEM_ADDR addr, WORD value)
+{
+   10d38:	e24dd010 	sub	sp, sp, #16
+   10d3c:	e58d0004 	str	r0, [sp, #4]
+   10d40:	e1a03001 	mov	r3, r1
+   10d44:	e1cd30b2 	strh	r3, [sp, #2]
+        unsigned short *ptr = (unsigned short *) addr;
+   10d48:	e59d3004 	ldr	r3, [sp, #4]
+   10d4c:	e58d300c 	str	r3, [sp, #12]
+        *ptr = value;
+   10d50:	e59d300c 	ldr	r3, [sp, #12]
+   10d54:	e1dd20b2 	ldrh	r2, [sp, #2]
+   10d58:	e1c320b0 	strh	r2, [r3]
+}
+   10d5c:	e28dd010 	add	sp, sp, #16
+   10d60:	e12fff1e 	bx	lr
+
+00010d64 <poke_l>:
+ *  Paramters:
+ *  addr: memory address
+ *  value: value to store
+ */
+void poke_l (MEM_ADDR addr, LONG value)
+{
+   10d64:	e24dd010 	sub	sp, sp, #16
+   10d68:	e58d0004 	str	r0, [sp, #4]
+   10d6c:	e58d1000 	str	r1, [sp]
+        unsigned *ptr = (unsigned *)addr;
+   10d70:	e59d3004 	ldr	r3, [sp, #4]
+   10d74:	e58d300c 	str	r3, [sp, #12]
+        *ptr = value;
+   10d78:	e59d300c 	ldr	r3, [sp, #12]
+   10d7c:	e59d2000 	ldr	r2, [sp]
+   10d80:	e5832000 	str	r2, [r3]
+}
+   10d84:	e28dd010 	add	sp, sp, #16
+   10d88:	e12fff1e 	bx	lr
+
+00010d8c <peek_b>:
+ *
+ *  Parameters:
+ *  addr: memory address
+ */
+BYTE peek_b (MEM_ADDR addr) 
+{
+   10d8c:	e24dd010 	sub	sp, sp, #16
+   10d90:	e58d0004 	str	r0, [sp, #4]
+        unsigned char *ptr = (unsigned char *)addr;
+   10d94:	e59d3004 	ldr	r3, [sp, #4]
+   10d98:	e58d300c 	str	r3, [sp, #12]
+        return *ptr;
+   10d9c:	e59d300c 	ldr	r3, [sp, #12]
+   10da0:	e5d33000 	ldrb	r3, [r3]
+}
+   10da4:	e1a00003 	mov	r0, r3
+   10da8:	e28dd010 	add	sp, sp, #16
+   10dac:	e12fff1e 	bx	lr
+
+00010db0 <peek_w>:
+ *
+ *  Parameters:
+ *  addr: memory address
+ */
+WORD peek_w (MEM_ADDR addr)
+{
+   10db0:	e24dd010 	sub	sp, sp, #16
+   10db4:	e58d0004 	str	r0, [sp, #4]
+        unsigned short *ptr = (unsigned short *) addr;
+   10db8:	e59d3004 	ldr	r3, [sp, #4]
+   10dbc:	e58d300c 	str	r3, [sp, #12]
+        return *ptr;
+   10dc0:	e59d300c 	ldr	r3, [sp, #12]
+   10dc4:	e1d330b0 	ldrh	r3, [r3]
+}
+   10dc8:	e1a00003 	mov	r0, r3
+   10dcc:	e28dd010 	add	sp, sp, #16
+   10dd0:	e12fff1e 	bx	lr
+
+00010dd4 <peek_l>:
+ *
+ *  Parameters:
+ *  addr: memory address
+ */
+LONG peek_l (MEM_ADDR addr)
+{
+   10dd4:	e24dd010 	sub	sp, sp, #16
+   10dd8:	e58d0004 	str	r0, [sp, #4]
+        unsigned *ptr = (unsigned *) addr;
+   10ddc:	e59d3004 	ldr	r3, [sp, #4]
+   10de0:	e58d300c 	str	r3, [sp, #12]
+        return *ptr;
+   10de4:	e59d300c 	ldr	r3, [sp, #12]
+   10de8:	e5933000 	ldr	r3, [r3]
+}
+   10dec:	e1a00003 	mov	r0, r3
+   10df0:	e28dd010 	add	sp, sp, #16
+   10df4:	e12fff1e 	bx	lr
+
+00010df8 <create_process>:
+ *
+ *  Return:
+ *  A port of the process
+ */
+PORT create_process (void (*ptr_to_new_proc) (PROCESS, PARAM), int prio, PARAM param, char *name)
+{
+   10df8:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   10dfc:	e24dd024 	sub	sp, sp, #36	; 0x24
+   10e00:	e58d000c 	str	r0, [sp, #12]
+   10e04:	e58d1008 	str	r1, [sp, #8]
+   10e08:	e58d2004 	str	r2, [sp, #4]
+   10e0c:	e58d3000 	str	r3, [sp]
+        int i,j;
+
+        // DISABLE INTERRUPT
+        DISABLE_INTR();
+   10e10:	e10f0000 	mrs	r0, CPSR
+   10e14:	e3800080 	orr	r0, r0, #128	; 0x80
+   10e18:	e121f000 	msr	CPSR_c, r0
+        
+        for (i=0; i<MAX_PROCS; i++) {
+   10e1c:	e3a03000 	mov	r3, #0
+   10e20:	e58d301c 	str	r3, [sp, #28]
+   10e24:	ea00000b 	b	10e58 <create_process+0x60>
+                if (pcb[i].used == FALSE)
+   10e28:	e59f2288 	ldr	r2, [pc, #648]	; 110b8 <create_process+0x2c0>
+   10e2c:	e59d301c 	ldr	r3, [sp, #28]
+   10e30:	e3a0102c 	mov	r1, #44	; 0x2c
+   10e34:	e0030391 	mul	r3, r1, r3
+   10e38:	e0823003 	add	r3, r2, r3
+   10e3c:	e5933004 	ldr	r3, [r3, #4]
+   10e40:	e3530000 	cmp	r3, #0
+   10e44:	1a000000 	bne	10e4c <create_process+0x54>
+                        break;
+   10e48:	ea000005 	b	10e64 <create_process+0x6c>
+        int i,j;
+
+        // DISABLE INTERRUPT
+        DISABLE_INTR();
+        
+        for (i=0; i<MAX_PROCS; i++) {
+   10e4c:	e59d301c 	ldr	r3, [sp, #28]
+   10e50:	e2833001 	add	r3, r3, #1
+   10e54:	e58d301c 	str	r3, [sp, #28]
+   10e58:	e59d301c 	ldr	r3, [sp, #28]
+   10e5c:	e3530013 	cmp	r3, #19
+   10e60:	dafffff0 	ble	10e28 <create_process+0x30>
+                if (pcb[i].used == FALSE)
+                        break;
+        }
+
+        pcb[i].magic            = MAGIC_PCB;
+   10e64:	e59f224c 	ldr	r2, [pc, #588]	; 110b8 <create_process+0x2c0>
+   10e68:	e59d301c 	ldr	r3, [sp, #28]
+   10e6c:	e3a0102c 	mov	r1, #44	; 0x2c
+   10e70:	e0030391 	mul	r3, r1, r3
+   10e74:	e0823003 	add	r3, r2, r3
+   10e78:	e59f223c 	ldr	r2, [pc, #572]	; 110bc <create_process+0x2c4>
+   10e7c:	e5832000 	str	r2, [r3]
+        pcb[i].used             = TRUE;
+   10e80:	e59f2230 	ldr	r2, [pc, #560]	; 110b8 <create_process+0x2c0>
+   10e84:	e59d301c 	ldr	r3, [sp, #28]
+   10e88:	e3a0102c 	mov	r1, #44	; 0x2c
+   10e8c:	e0030391 	mul	r3, r1, r3
+   10e90:	e0823003 	add	r3, r2, r3
+   10e94:	e3a02001 	mov	r2, #1
+   10e98:	e5832004 	str	r2, [r3, #4]
+        pcb[i].state            = STATE_READY;
+   10e9c:	e59f2214 	ldr	r2, [pc, #532]	; 110b8 <create_process+0x2c0>
+   10ea0:	e59d301c 	ldr	r3, [sp, #28]
+   10ea4:	e3a0102c 	mov	r1, #44	; 0x2c
+   10ea8:	e0030391 	mul	r3, r1, r3
+   10eac:	e0823003 	add	r3, r2, r3
+   10eb0:	e2833008 	add	r3, r3, #8
+   10eb4:	e3a02000 	mov	r2, #0
+   10eb8:	e1c320b2 	strh	r2, [r3, #2]
+        pcb[i].priority         = prio;
+   10ebc:	e59d3008 	ldr	r3, [sp, #8]
+   10ec0:	e6ff2073 	uxth	r2, r3
+   10ec4:	e59f11ec 	ldr	r1, [pc, #492]	; 110b8 <create_process+0x2c0>
+   10ec8:	e59d301c 	ldr	r3, [sp, #28]
+   10ecc:	e3a0002c 	mov	r0, #44	; 0x2c
+   10ed0:	e0030390 	mul	r3, r0, r3
+   10ed4:	e0813003 	add	r3, r1, r3
+   10ed8:	e2833008 	add	r3, r3, #8
+   10edc:	e1c320b0 	strh	r2, [r3]
+        pcb[i].first_port       = NULL;
+   10ee0:	e59f21d0 	ldr	r2, [pc, #464]	; 110b8 <create_process+0x2c0>
+   10ee4:	e59d301c 	ldr	r3, [sp, #28]
+   10ee8:	e3a0102c 	mov	r1, #44	; 0x2c
+   10eec:	e0030391 	mul	r3, r1, r3
+   10ef0:	e0823003 	add	r3, r2, r3
+   10ef4:	e2833018 	add	r3, r3, #24
+   10ef8:	e3a02000 	mov	r2, #0
+   10efc:	e5832000 	str	r2, [r3]
+        pcb[i].name             = name;
+   10f00:	e59f21b0 	ldr	r2, [pc, #432]	; 110b8 <create_process+0x2c0>
+   10f04:	e59d301c 	ldr	r3, [sp, #28]
+   10f08:	e3a0102c 	mov	r1, #44	; 0x2c
+   10f0c:	e0030391 	mul	r3, r1, r3
+   10f10:	e0823003 	add	r3, r2, r3
+   10f14:	e2833028 	add	r3, r3, #40	; 0x28
+   10f18:	e59d2000 	ldr	r2, [sp]
+   10f1c:	e5832000 	str	r2, [r3]
+        pcb[i].next_blocked     = NULL;
+   10f20:	e59f2190 	ldr	r2, [pc, #400]	; 110b8 <create_process+0x2c0>
+   10f24:	e59d301c 	ldr	r3, [sp, #28]
+   10f28:	e3a0102c 	mov	r1, #44	; 0x2c
+   10f2c:	e0030391 	mul	r3, r1, r3
+   10f30:	e0823003 	add	r3, r2, r3
+   10f34:	e2833018 	add	r3, r3, #24
+   10f38:	e3a02000 	mov	r2, #0
+   10f3c:	e5832004 	str	r2, [r3, #4]
+
+        MEM_ADDR sp = SP_BASE - STACK_SIZE * i;
+   10f40:	e59d201c 	ldr	r2, [sp, #28]
+   10f44:	e1a03002 	mov	r3, r2
+   10f48:	e1a02202 	lsl	r2, r2, #4
+   10f4c:	e0623003 	rsb	r3, r2, r3
+   10f50:	e1a03583 	lsl	r3, r3, #11
+   10f54:	e283380a 	add	r3, r3, #655360	; 0xa0000
+   10f58:	e58d3014 	str	r3, [sp, #20]
+
+        /* save actual PARAM (second param of func ptr_to_new_proc) */
+        sp -= 4;
+   10f5c:	e59d3014 	ldr	r3, [sp, #20]
+   10f60:	e2433004 	sub	r3, r3, #4
+   10f64:	e58d3014 	str	r3, [sp, #20]
+        poke_l(sp, param);
+   10f68:	e59d0014 	ldr	r0, [sp, #20]
+   10f6c:	e59d1004 	ldr	r1, [sp, #4]
+   10f70:	ebffff7b 	bl	10d64 <poke_l>
+        /* save create process self (first param of func ptr_to_new_proc)*/
+        sp -= 4;
+   10f74:	e59d3014 	ldr	r3, [sp, #20]
+   10f78:	e2433004 	sub	r3, r3, #4
+   10f7c:	e58d3014 	str	r3, [sp, #20]
+        poke_l(sp, (LONG)&pcb[i]);
+   10f80:	e59d301c 	ldr	r3, [sp, #28]
+   10f84:	e3a0202c 	mov	r2, #44	; 0x2c
+   10f88:	e0030392 	mul	r3, r2, r3
+   10f8c:	e59f2124 	ldr	r2, [pc, #292]	; 110b8 <create_process+0x2c0>
+   10f90:	e0833002 	add	r3, r3, r2
+   10f94:	e59d0014 	ldr	r0, [sp, #20]
+   10f98:	e1a01003 	mov	r1, r3
+   10f9c:	ebffff70 	bl	10d64 <poke_l>
+
+        /*
+            TODO Need but return address here
+        */        
+        /* new process address */
+        sp -= 4;
+   10fa0:	e59d3014 	ldr	r3, [sp, #20]
+   10fa4:	e2433004 	sub	r3, r3, #4
+   10fa8:	e58d3014 	str	r3, [sp, #20]
+        poke_l(sp, (LONG)ptr_to_new_proc);
+   10fac:	e59d300c 	ldr	r3, [sp, #12]
+   10fb0:	e59d0014 	ldr	r0, [sp, #20]
+   10fb4:	e1a01003 	mov	r1, r3
+   10fb8:	ebffff69 	bl	10d64 <poke_l>
+
+        /* initialize r0 to r12 */
+        for (j=0; j<=12; j++){ 
+   10fbc:	e3a03000 	mov	r3, #0
+   10fc0:	e58d3018 	str	r3, [sp, #24]
+   10fc4:	ea000008 	b	10fec <create_process+0x1f4>
+            sp -= 4;
+   10fc8:	e59d3014 	ldr	r3, [sp, #20]
+   10fcc:	e2433004 	sub	r3, r3, #4
+   10fd0:	e58d3014 	str	r3, [sp, #20]
+            poke_l(sp, 0);
+   10fd4:	e59d0014 	ldr	r0, [sp, #20]
+   10fd8:	e3a01000 	mov	r1, #0
+   10fdc:	ebffff60 	bl	10d64 <poke_l>
+        /* new process address */
+        sp -= 4;
+        poke_l(sp, (LONG)ptr_to_new_proc);
+
+        /* initialize r0 to r12 */
+        for (j=0; j<=12; j++){ 
+   10fe0:	e59d3018 	ldr	r3, [sp, #24]
+   10fe4:	e2833001 	add	r3, r3, #1
+   10fe8:	e58d3018 	str	r3, [sp, #24]
+   10fec:	e59d3018 	ldr	r3, [sp, #24]
+   10ff0:	e353000c 	cmp	r3, #12
+   10ff4:	dafffff3 	ble	10fc8 <create_process+0x1d0>
+            sp -= 4;
+            poke_l(sp, 0);
+        }
+                
+        sp -= 4;
+   10ff8:	e59d3014 	ldr	r3, [sp, #20]
+   10ffc:	e2433004 	sub	r3, r3, #4
+   11000:	e58d3014 	str	r3, [sp, #20]
+        /* Push CPSR here, set mode to SYS mode, enable irq, since enalbe irq is clear 7 bit of cpsr, so we do not need push anything here. */ 
+        poke_l(sp, 0x1f);
+   11004:	e59d0014 	ldr	r0, [sp, #20]
+   11008:	e3a0101f 	mov	r1, #31
+   1100c:	ebffff54 	bl	10d64 <poke_l>
+                
+        pcb[i].sp = sp;
+   11010:	e59f20a0 	ldr	r2, [pc, #160]	; 110b8 <create_process+0x2c0>
+   11014:	e59d301c 	ldr	r3, [sp, #28]
+   11018:	e3a0102c 	mov	r1, #44	; 0x2c
+   1101c:	e0030391 	mul	r3, r1, r3
+   11020:	e0823003 	add	r3, r2, r3
+   11024:	e2833008 	add	r3, r3, #8
+   11028:	e59d2014 	ldr	r2, [sp, #20]
+   1102c:	e5832004 	str	r2, [r3, #4]
+        pcb[i].param_proc = &pcb[i];
+   11030:	e59d301c 	ldr	r3, [sp, #28]
+   11034:	e3a0202c 	mov	r2, #44	; 0x2c
+   11038:	e0030392 	mul	r3, r2, r3
+   1103c:	e59f2074 	ldr	r2, [pc, #116]	; 110b8 <create_process+0x2c0>
+   11040:	e0832002 	add	r2, r3, r2
+   11044:	e59f106c 	ldr	r1, [pc, #108]	; 110b8 <create_process+0x2c0>
+   11048:	e59d301c 	ldr	r3, [sp, #28]
+   1104c:	e3a0002c 	mov	r0, #44	; 0x2c
+   11050:	e0030390 	mul	r3, r0, r3
+   11054:	e0813003 	add	r3, r1, r3
+   11058:	e2833010 	add	r3, r3, #16
+   1105c:	e5832000 	str	r2, [r3]
+        pcb[i].param_data = (void *)param;
+   11060:	e59d2004 	ldr	r2, [sp, #4]
+   11064:	e59f104c 	ldr	r1, [pc, #76]	; 110b8 <create_process+0x2c0>
+   11068:	e59d301c 	ldr	r3, [sp, #28]
+   1106c:	e3a0002c 	mov	r0, #44	; 0x2c
+   11070:	e0030390 	mul	r3, r0, r3
+   11074:	e0813003 	add	r3, r1, r3
+   11078:	e2833010 	add	r3, r3, #16
+   1107c:	e5832004 	str	r2, [r3, #4]
+        add_ready_queue(&pcb[i]);
+   11080:	e59d301c 	ldr	r3, [sp, #28]
+   11084:	e3a0202c 	mov	r2, #44	; 0x2c
+   11088:	e0030392 	mul	r3, r2, r3
+   1108c:	e59f2024 	ldr	r2, [pc, #36]	; 110b8 <create_process+0x2c0>
+   11090:	e0833002 	add	r3, r3, r2
+   11094:	e1a00003 	mov	r0, r3
+   11098:	ebfffbe8 	bl	10040 <add_ready_queue>
+        //WriteString("Create Process Done");
+        /* TODO port related code */
+
+        /* TODO enable interrupt here */
+        ENABLE_INTR();
+   1109c:	e10f0000 	mrs	r0, CPSR
+   110a0:	e3c00080 	bic	r0, r0, #128	; 0x80
+   110a4:	e121f000 	msr	CPSR_c, r0
+        
+        /* TODO return port here */
+        return NULL;
+   110a8:	e3a03000 	mov	r3, #0
+}
+   110ac:	e1a00003 	mov	r0, r3
+   110b0:	e28dd024 	add	sp, sp, #36	; 0x24
+   110b4:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+   110b8:	0001a1a0 	.word	0x0001a1a0
+   110bc:	4321dcba 	.word	0x4321dcba
+
+000110c0 <init_process>:
+ * init_process()
+ * --------------
+ *  Initialize process
+ */
+void init_process()
+{
+   110c0:	e24dd008 	sub	sp, sp, #8
+        int i;
+        for (i=0; i<MAX_PROCS; i++) {
+   110c4:	e3a03000 	mov	r3, #0
+   110c8:	e58d3004 	str	r3, [sp, #4]
+   110cc:	ea000009 	b	110f8 <init_process+0x38>
+                pcb[i].used = FALSE;
+   110d0:	e59f207c 	ldr	r2, [pc, #124]	; 11154 <init_process+0x94>
+   110d4:	e59d3004 	ldr	r3, [sp, #4]
+   110d8:	e3a0102c 	mov	r1, #44	; 0x2c
+   110dc:	e0030391 	mul	r3, r1, r3
+   110e0:	e0823003 	add	r3, r2, r3
+   110e4:	e3a02000 	mov	r2, #0
+   110e8:	e5832004 	str	r2, [r3, #4]
+ *  Initialize process
+ */
+void init_process()
+{
+        int i;
+        for (i=0; i<MAX_PROCS; i++) {
+   110ec:	e59d3004 	ldr	r3, [sp, #4]
+   110f0:	e2833001 	add	r3, r3, #1
+   110f4:	e58d3004 	str	r3, [sp, #4]
+   110f8:	e59d3004 	ldr	r3, [sp, #4]
+   110fc:	e3530013 	cmp	r3, #19
+   11100:	dafffff2 	ble	110d0 <init_process+0x10>
+                pcb[i].used = FALSE;
+        }
+
+        // boot process init
+        pcb[0].magic            = MAGIC_PCB;
+   11104:	e59f3048 	ldr	r3, [pc, #72]	; 11154 <init_process+0x94>
+   11108:	e59f2048 	ldr	r2, [pc, #72]	; 11158 <init_process+0x98>
+   1110c:	e5832000 	str	r2, [r3]
+        pcb[0].used             = TRUE;
+   11110:	e59f303c 	ldr	r3, [pc, #60]	; 11154 <init_process+0x94>
+   11114:	e3a02001 	mov	r2, #1
+   11118:	e5832004 	str	r2, [r3, #4]
+        pcb[0].state            = STATE_READY;
+   1111c:	e59f3030 	ldr	r3, [pc, #48]	; 11154 <init_process+0x94>
+   11120:	e3a02000 	mov	r2, #0
+   11124:	e1c320ba 	strh	r2, [r3, #10]
+        pcb[0].priority         = 1;
+   11128:	e59f3024 	ldr	r3, [pc, #36]	; 11154 <init_process+0x94>
+   1112c:	e3a02001 	mov	r2, #1
+   11130:	e1c320b8 	strh	r2, [r3, #8]
+        pcb[0].first_port       = NULL;
+   11134:	e59f3018 	ldr	r3, [pc, #24]	; 11154 <init_process+0x94>
+   11138:	e3a02000 	mov	r2, #0
+   1113c:	e5832018 	str	r2, [r3, #24]
+        pcb[0].name             = "Boot process";
+   11140:	e59f300c 	ldr	r3, [pc, #12]	; 11154 <init_process+0x94>
+   11144:	e59f2010 	ldr	r2, [pc, #16]	; 1115c <init_process+0x9c>
+   11148:	e5832028 	str	r2, [r3, #40]	; 0x28
+}
+   1114c:	e28dd008 	add	sp, sp, #8
+   11150:	e12fff1e 	bx	lr
+   11154:	0001a1a0 	.word	0x0001a1a0
+   11158:	4321dcba 	.word	0x4321dcba
+   1115c:	00012118 	.word	0x00012118
+
+00011160 <charToBin>:
+ *  length: the binary length
+ *
+ *  Note:
+ *  The content of binary array is reversed. 
+ */
+void charToBin(char c, int* buf, const int length) {
+   11160:	e24dd018 	sub	sp, sp, #24
+   11164:	e1a03000 	mov	r3, r0
+   11168:	e58d1008 	str	r1, [sp, #8]
+   1116c:	e58d2004 	str	r2, [sp, #4]
+   11170:	e5cd300f 	strb	r3, [sp, #15]
+        int i, mask;
+        mask = 1;
+   11174:	e3a03001 	mov	r3, #1
+   11178:	e58d3010 	str	r3, [sp, #16]
+        for (i=0; i<length; i++) {
+   1117c:	e3a03000 	mov	r3, #0
+   11180:	e58d3014 	str	r3, [sp, #20]
+   11184:	ea00000c 	b	111bc <charToBin+0x5c>
+                *(buf+i) = ((int)c>>i)&mask; 
+   11188:	e59d3014 	ldr	r3, [sp, #20]
+   1118c:	e1a03103 	lsl	r3, r3, #2
+   11190:	e59d2008 	ldr	r2, [sp, #8]
+   11194:	e0823003 	add	r3, r2, r3
+   11198:	e5dd100f 	ldrb	r1, [sp, #15]
+   1119c:	e59d2014 	ldr	r2, [sp, #20]
+   111a0:	e1a01251 	asr	r1, r1, r2
+   111a4:	e59d2010 	ldr	r2, [sp, #16]
+   111a8:	e0022001 	and	r2, r2, r1
+   111ac:	e5832000 	str	r2, [r3]
+ *  The content of binary array is reversed. 
+ */
+void charToBin(char c, int* buf, const int length) {
+        int i, mask;
+        mask = 1;
+        for (i=0; i<length; i++) {
+   111b0:	e59d3014 	ldr	r3, [sp, #20]
+   111b4:	e2833001 	add	r3, r3, #1
+   111b8:	e58d3014 	str	r3, [sp, #20]
+   111bc:	e59d2014 	ldr	r2, [sp, #20]
+   111c0:	e59d3004 	ldr	r3, [sp, #4]
+   111c4:	e1520003 	cmp	r2, r3
+   111c8:	baffffee 	blt	11188 <charToBin+0x28>
+                *(buf+i) = ((int)c>>i)&mask; 
+        }
+}
+   111cc:	e28dd018 	add	sp, sp, #24
+   111d0:	e12fff1e 	bx	lr
+
+000111d4 <printnum>:
+ */
+#define MAXBUF (sizeof(long int) * 8) /* MAX length of the string */
+char *printnum(char *b, unsigned int u, int base, 
+                BOOL negflag, int length, BOOL ladjust, 
+                char padc, BOOL upcase)
+{
+   111d4:	e92d4010 	push	{r4, lr}
+   111d8:	e24dd040 	sub	sp, sp, #64	; 0x40
+   111dc:	e58d000c 	str	r0, [sp, #12]
+   111e0:	e58d1008 	str	r1, [sp, #8]
+   111e4:	e58d2004 	str	r2, [sp, #4]
+   111e8:	e58d3000 	str	r3, [sp]
+        char buf[MAXBUF];       /* build number here */
+        char *p = &buf[MAXBUF-1];
+   111ec:	e28d3014 	add	r3, sp, #20
+   111f0:	e283301f 	add	r3, r3, #31
+   111f4:	e58d303c 	str	r3, [sp, #60]	; 0x3c
+        int size;
+        char *digs;
+        static char up_digs[]   = "0123456789ABCDEF";
+        static char low_digs[]  = "0123456789abcdef";
+        
+        digs = upcase ? up_digs : low_digs;
+   111f8:	e59d3054 	ldr	r3, [sp, #84]	; 0x54
+   111fc:	e3530000 	cmp	r3, #0
+   11200:	0a000001 	beq	1120c <printnum+0x38>
+   11204:	e59f3160 	ldr	r3, [pc, #352]	; 1136c <printnum+0x198>
+   11208:	ea000000 	b	11210 <printnum+0x3c>
+   1120c:	e59f315c 	ldr	r3, [pc, #348]	; 11370 <printnum+0x19c>
+   11210:	e58d3038 	str	r3, [sp, #56]	; 0x38
+        do {
+                *p-- = digs[u % base];
+   11214:	e59d403c 	ldr	r4, [sp, #60]	; 0x3c
+   11218:	e2443001 	sub	r3, r4, #1
+   1121c:	e58d303c 	str	r3, [sp, #60]	; 0x3c
+   11220:	e59d3004 	ldr	r3, [sp, #4]
+   11224:	e59d2008 	ldr	r2, [sp, #8]
+   11228:	e1a00002 	mov	r0, r2
+   1122c:	e1a01003 	mov	r1, r3
+   11230:	eb00039d 	bl	120ac <__aeabi_uidivmod>
+   11234:	e1a03001 	mov	r3, r1
+   11238:	e1a02003 	mov	r2, r3
+   1123c:	e59d3038 	ldr	r3, [sp, #56]	; 0x38
+   11240:	e0833002 	add	r3, r3, r2
+   11244:	e5d33000 	ldrb	r3, [r3]
+   11248:	e5c43000 	strb	r3, [r4]
+                //u /= base;
+        } while (u != 0);
+   1124c:	e59d3008 	ldr	r3, [sp, #8]
+   11250:	e3530000 	cmp	r3, #0
+   11254:	1affffee 	bne	11214 <printnum+0x40>
+
+        if (negflag) {
+   11258:	e59d3000 	ldr	r3, [sp]
+   1125c:	e3530000 	cmp	r3, #0
+   11260:	0a000004 	beq	11278 <printnum+0xa4>
+                *b++ = '-';
+   11264:	e59d300c 	ldr	r3, [sp, #12]
+   11268:	e2832001 	add	r2, r3, #1
+   1126c:	e58d200c 	str	r2, [sp, #12]
+   11270:	e3a0202d 	mov	r2, #45	; 0x2d
+   11274:	e5c32000 	strb	r2, [r3]
+        }
+
+        size = &buf[MAXBUF - 1] - p;
+   11278:	e28d3014 	add	r3, sp, #20
+   1127c:	e283201f 	add	r2, r3, #31
+   11280:	e59d303c 	ldr	r3, [sp, #60]	; 0x3c
+   11284:	e0633002 	rsb	r3, r3, r2
+   11288:	e58d3034 	str	r3, [sp, #52]	; 0x34
+        
+        if (size < length && !ladjust) {
+   1128c:	e59d2034 	ldr	r2, [sp, #52]	; 0x34
+   11290:	e59d3048 	ldr	r3, [sp, #72]	; 0x48
+   11294:	e1520003 	cmp	r2, r3
+   11298:	aa00000f 	bge	112dc <printnum+0x108>
+   1129c:	e59d304c 	ldr	r3, [sp, #76]	; 0x4c
+   112a0:	e3530000 	cmp	r3, #0
+   112a4:	1a00000c 	bne	112dc <printnum+0x108>
+                while (length > size) {
+   112a8:	ea000007 	b	112cc <printnum+0xf8>
+                        *b++ = padc;
+   112ac:	e59d300c 	ldr	r3, [sp, #12]
+   112b0:	e2832001 	add	r2, r3, #1
+   112b4:	e58d200c 	str	r2, [sp, #12]
+   112b8:	e5dd2050 	ldrb	r2, [sp, #80]	; 0x50
+   112bc:	e5c32000 	strb	r2, [r3]
+                        length--;
+   112c0:	e59d3048 	ldr	r3, [sp, #72]	; 0x48
+   112c4:	e2433001 	sub	r3, r3, #1
+   112c8:	e58d3048 	str	r3, [sp, #72]	; 0x48
+        }
+
+        size = &buf[MAXBUF - 1] - p;
+        
+        if (size < length && !ladjust) {
+                while (length > size) {
+   112cc:	e59d2048 	ldr	r2, [sp, #72]	; 0x48
+   112d0:	e59d3034 	ldr	r3, [sp, #52]	; 0x34
+   112d4:	e1520003 	cmp	r2, r3
+   112d8:	cafffff3 	bgt	112ac <printnum+0xd8>
+                        *b++ = padc;
+                        length--;
+                }
+        }
+
+        while (++p != &buf[MAXBUF]) {
+   112dc:	ea000005 	b	112f8 <printnum+0x124>
+                *b++ = *p;
+   112e0:	e59d300c 	ldr	r3, [sp, #12]
+   112e4:	e2832001 	add	r2, r3, #1
+   112e8:	e58d200c 	str	r2, [sp, #12]
+   112ec:	e59d203c 	ldr	r2, [sp, #60]	; 0x3c
+   112f0:	e5d22000 	ldrb	r2, [r2]
+   112f4:	e5c32000 	strb	r2, [r3]
+                        *b++ = padc;
+                        length--;
+                }
+        }
+
+        while (++p != &buf[MAXBUF]) {
+   112f8:	e59d303c 	ldr	r3, [sp, #60]	; 0x3c
+   112fc:	e2833001 	add	r3, r3, #1
+   11300:	e58d303c 	str	r3, [sp, #60]	; 0x3c
+   11304:	e28d3014 	add	r3, sp, #20
+   11308:	e2833020 	add	r3, r3, #32
+   1130c:	e59d203c 	ldr	r2, [sp, #60]	; 0x3c
+   11310:	e1520003 	cmp	r2, r3
+   11314:	1afffff1 	bne	112e0 <printnum+0x10c>
+                *b++ = *p;
+        }
+
+        if (size < length) {
+   11318:	e59d2034 	ldr	r2, [sp, #52]	; 0x34
+   1131c:	e59d3048 	ldr	r3, [sp, #72]	; 0x48
+   11320:	e1520003 	cmp	r2, r3
+   11324:	aa00000c 	bge	1135c <printnum+0x188>
+                while (length > size) {
+   11328:	ea000007 	b	1134c <printnum+0x178>
+                        *b++ = padc;
+   1132c:	e59d300c 	ldr	r3, [sp, #12]
+   11330:	e2832001 	add	r2, r3, #1
+   11334:	e58d200c 	str	r2, [sp, #12]
+   11338:	e5dd2050 	ldrb	r2, [sp, #80]	; 0x50
+   1133c:	e5c32000 	strb	r2, [r3]
+                        length--;
+   11340:	e59d3048 	ldr	r3, [sp, #72]	; 0x48
+   11344:	e2433001 	sub	r3, r3, #1
+   11348:	e58d3048 	str	r3, [sp, #72]	; 0x48
+        while (++p != &buf[MAXBUF]) {
+                *b++ = *p;
+        }
+
+        if (size < length) {
+                while (length > size) {
+   1134c:	e59d2048 	ldr	r2, [sp, #72]	; 0x48
+   11350:	e59d3034 	ldr	r3, [sp, #52]	; 0x34
+   11354:	e1520003 	cmp	r2, r3
+   11358:	cafffff3 	bgt	1132c <printnum+0x158>
+                        *b++ = padc;
+                        length--;
+                }
+        }
+        return b;
+   1135c:	e59d300c 	ldr	r3, [sp, #12]
+}
+   11360:	e1a00003 	mov	r0, r3
+   11364:	e28dd040 	add	sp, sp, #64	; 0x40
+   11368:	e8bd8010 	pop	{r4, pc}
+   1136c:	0001a130 	.word	0x0001a130
+   11370:	0001a144 	.word	0x0001a144
+
+00011374 <vs_printf>:
+ *    fmt:      format used by printf
+ *    argp:     parameters for fmt
+ */
+#define isdigit(d) ((d) >= '0' && (d) <= '9')
+#define ctod(c) ((c) - '0')
+void vs_printf(char *buf, const char *fmt, va_list argp){
+   11374:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   11378:	e24dd04c 	sub	sp, sp, #76	; 0x4c
+   1137c:	e58d001c 	str	r0, [sp, #28]
+   11380:	e58d1018 	str	r1, [sp, #24]
+   11384:	e58d2014 	str	r2, [sp, #20]
+        int             n;
+        unsigned int    u;
+        int             negflag;
+        char            c;
+
+        while (*fmt != '\0') {
+   11388:	ea000225 	b	11c24 <vs_printf+0x8b0>
+                if (*fmt != '%') {
+   1138c:	e59d3018 	ldr	r3, [sp, #24]
+   11390:	e5d33000 	ldrb	r3, [r3]
+   11394:	e3530025 	cmp	r3, #37	; 0x25
+   11398:	0a000008 	beq	113c0 <vs_printf+0x4c>
+                        *buf++ = *fmt++;
+   1139c:	e59d301c 	ldr	r3, [sp, #28]
+   113a0:	e2832001 	add	r2, r3, #1
+   113a4:	e58d201c 	str	r2, [sp, #28]
+   113a8:	e59d2018 	ldr	r2, [sp, #24]
+   113ac:	e2821001 	add	r1, r2, #1
+   113b0:	e58d1018 	str	r1, [sp, #24]
+   113b4:	e5d22000 	ldrb	r2, [r2]
+   113b8:	e5c32000 	strb	r2, [r3]
+                        continue;
+   113bc:	ea000218 	b	11c24 <vs_printf+0x8b0>
+                }
+                fmt++;
+   113c0:	e59d3018 	ldr	r3, [sp, #24]
+   113c4:	e2833001 	add	r3, r3, #1
+   113c8:	e58d3018 	str	r3, [sp, #24]
+                if (*fmt == 'l'){
+   113cc:	e59d3018 	ldr	r3, [sp, #24]
+   113d0:	e5d33000 	ldrb	r3, [r3]
+   113d4:	e353006c 	cmp	r3, #108	; 0x6c
+   113d8:	1a000002 	bne	113e8 <vs_printf+0x74>
+                        fmt++;          /* need to use it if sizeof(int) < sizeof(long) */
+   113dc:	e59d3018 	ldr	r3, [sp, #24]
+   113e0:	e2833001 	add	r3, r3, #1
+   113e4:	e58d3018 	str	r3, [sp, #24]
+                }
+
+                length = 0;
+   113e8:	e3a03000 	mov	r3, #0
+   113ec:	e58d3040 	str	r3, [sp, #64]	; 0x40
+                prec = -1;
+   113f0:	e3e03000 	mvn	r3, #0
+   113f4:	e58d303c 	str	r3, [sp, #60]	; 0x3c
+                ladjust = FALSE;
+   113f8:	e3a03000 	mov	r3, #0
+   113fc:	e58d3038 	str	r3, [sp, #56]	; 0x38
+                padc = ' ';
+   11400:	e3a03020 	mov	r3, #32
+   11404:	e5cd3037 	strb	r3, [sp, #55]	; 0x37
+
+                if (*fmt == '-') {
+   11408:	e59d3018 	ldr	r3, [sp, #24]
+   1140c:	e5d33000 	ldrb	r3, [r3]
+   11410:	e353002d 	cmp	r3, #45	; 0x2d
+   11414:	1a000004 	bne	1142c <vs_printf+0xb8>
+                        ladjust = TRUE;
+   11418:	e3a03001 	mov	r3, #1
+   1141c:	e58d3038 	str	r3, [sp, #56]	; 0x38
+                        fmt ++;
+   11420:	e59d3018 	ldr	r3, [sp, #24]
+   11424:	e2833001 	add	r3, r3, #1
+   11428:	e58d3018 	str	r3, [sp, #24]
+                }
+
+                if (*fmt == '0') {
+   1142c:	e59d3018 	ldr	r3, [sp, #24]
+   11430:	e5d33000 	ldrb	r3, [r3]
+   11434:	e3530030 	cmp	r3, #48	; 0x30
+   11438:	1a000004 	bne	11450 <vs_printf+0xdc>
+                        padc = '0';
+   1143c:	e3a03030 	mov	r3, #48	; 0x30
+   11440:	e5cd3037 	strb	r3, [sp, #55]	; 0x37
+                        fmt++;
+   11444:	e59d3018 	ldr	r3, [sp, #24]
+   11448:	e2833001 	add	r3, r3, #1
+   1144c:	e58d3018 	str	r3, [sp, #24]
+                }
+
+                if (isdigit(*fmt)) {
+   11450:	e59d3018 	ldr	r3, [sp, #24]
+   11454:	e5d33000 	ldrb	r3, [r3]
+   11458:	e353002f 	cmp	r3, #47	; 0x2f
+   1145c:	9a00001a 	bls	114cc <vs_printf+0x158>
+   11460:	e59d3018 	ldr	r3, [sp, #24]
+   11464:	e5d33000 	ldrb	r3, [r3]
+   11468:	e3530039 	cmp	r3, #57	; 0x39
+   1146c:	8a000016 	bhi	114cc <vs_printf+0x158>
+                        while(isdigit (*fmt)) {
+   11470:	ea00000c 	b	114a8 <vs_printf+0x134>
+                                length = 10 * length + ctod(*fmt++);
+   11474:	e59d2040 	ldr	r2, [sp, #64]	; 0x40
+   11478:	e1a03002 	mov	r3, r2
+   1147c:	e1a03103 	lsl	r3, r3, #2
+   11480:	e0833002 	add	r3, r3, r2
+   11484:	e1a03083 	lsl	r3, r3, #1
+   11488:	e1a01003 	mov	r1, r3
+   1148c:	e59d3018 	ldr	r3, [sp, #24]
+   11490:	e2832001 	add	r2, r3, #1
+   11494:	e58d2018 	str	r2, [sp, #24]
+   11498:	e5d33000 	ldrb	r3, [r3]
+   1149c:	e2433030 	sub	r3, r3, #48	; 0x30
+   114a0:	e0813003 	add	r3, r1, r3
+   114a4:	e58d3040 	str	r3, [sp, #64]	; 0x40
+                        padc = '0';
+                        fmt++;
+                }
+
+                if (isdigit(*fmt)) {
+                        while(isdigit (*fmt)) {
+   114a8:	e59d3018 	ldr	r3, [sp, #24]
+   114ac:	e5d33000 	ldrb	r3, [r3]
+   114b0:	e353002f 	cmp	r3, #47	; 0x2f
+   114b4:	9a000003 	bls	114c8 <vs_printf+0x154>
+   114b8:	e59d3018 	ldr	r3, [sp, #24]
+   114bc:	e5d33000 	ldrb	r3, [r3]
+   114c0:	e3530039 	cmp	r3, #57	; 0x39
+   114c4:	9affffea 	bls	11474 <vs_printf+0x100>
+                if (*fmt == '0') {
+                        padc = '0';
+                        fmt++;
+                }
+
+                if (isdigit(*fmt)) {
+   114c8:	ea000018 	b	11530 <vs_printf+0x1bc>
+                        while(isdigit (*fmt)) {
+                                length = 10 * length + ctod(*fmt++);
+                        }
+                } else if (*fmt == '*') {
+   114cc:	e59d3018 	ldr	r3, [sp, #24]
+   114d0:	e5d33000 	ldrb	r3, [r3]
+   114d4:	e353002a 	cmp	r3, #42	; 0x2a
+   114d8:	1a000014 	bne	11530 <vs_printf+0x1bc>
+                        length = va_arg(argp, int);
+   114dc:	e59d3014 	ldr	r3, [sp, #20]
+   114e0:	e2833004 	add	r3, r3, #4
+   114e4:	e58d3014 	str	r3, [sp, #20]
+   114e8:	e59d3014 	ldr	r3, [sp, #20]
+   114ec:	e5133004 	ldr	r3, [r3, #-4]
+   114f0:	e58d3040 	str	r3, [sp, #64]	; 0x40
+                        fmt++;
+   114f4:	e59d3018 	ldr	r3, [sp, #24]
+   114f8:	e2833001 	add	r3, r3, #1
+   114fc:	e58d3018 	str	r3, [sp, #24]
+                        if (length < 0) {
+   11500:	e59d3040 	ldr	r3, [sp, #64]	; 0x40
+   11504:	e3530000 	cmp	r3, #0
+   11508:	aa000008 	bge	11530 <vs_printf+0x1bc>
+                                ladjust = !ladjust;
+   1150c:	e59d3038 	ldr	r3, [sp, #56]	; 0x38
+   11510:	e3530000 	cmp	r3, #0
+   11514:	03a03001 	moveq	r3, #1
+   11518:	13a03000 	movne	r3, #0
+   1151c:	e6ef3073 	uxtb	r3, r3
+   11520:	e58d3038 	str	r3, [sp, #56]	; 0x38
+                                length = -length;
+   11524:	e59d3040 	ldr	r3, [sp, #64]	; 0x40
+   11528:	e2633000 	rsb	r3, r3, #0
+   1152c:	e58d3040 	str	r3, [sp, #64]	; 0x40
+                        }
+                }
+
+                if (*fmt == '.') {
+   11530:	e59d3018 	ldr	r3, [sp, #24]
+   11534:	e5d33000 	ldrb	r3, [r3]
+   11538:	e353002e 	cmp	r3, #46	; 0x2e
+   1153c:	1a000030 	bne	11604 <vs_printf+0x290>
+                        fmt++;
+   11540:	e59d3018 	ldr	r3, [sp, #24]
+   11544:	e2833001 	add	r3, r3, #1
+   11548:	e58d3018 	str	r3, [sp, #24]
+                        if (isdigit(*fmt)) {
+   1154c:	e59d3018 	ldr	r3, [sp, #24]
+   11550:	e5d33000 	ldrb	r3, [r3]
+   11554:	e353002f 	cmp	r3, #47	; 0x2f
+   11558:	9a00001c 	bls	115d0 <vs_printf+0x25c>
+   1155c:	e59d3018 	ldr	r3, [sp, #24]
+   11560:	e5d33000 	ldrb	r3, [r3]
+   11564:	e3530039 	cmp	r3, #57	; 0x39
+   11568:	8a000018 	bhi	115d0 <vs_printf+0x25c>
+                                prec = 0;
+   1156c:	e3a03000 	mov	r3, #0
+   11570:	e58d303c 	str	r3, [sp, #60]	; 0x3c
+                                while(isdigit (*fmt)) {
+   11574:	ea00000c 	b	115ac <vs_printf+0x238>
+                                        prec = 10 * prec +ctod(*fmt++);
+   11578:	e59d203c 	ldr	r2, [sp, #60]	; 0x3c
+   1157c:	e1a03002 	mov	r3, r2
+   11580:	e1a03103 	lsl	r3, r3, #2
+   11584:	e0833002 	add	r3, r3, r2
+   11588:	e1a03083 	lsl	r3, r3, #1
+   1158c:	e1a01003 	mov	r1, r3
+   11590:	e59d3018 	ldr	r3, [sp, #24]
+   11594:	e2832001 	add	r2, r3, #1
+   11598:	e58d2018 	str	r2, [sp, #24]
+   1159c:	e5d33000 	ldrb	r3, [r3]
+   115a0:	e2433030 	sub	r3, r3, #48	; 0x30
+   115a4:	e0813003 	add	r3, r1, r3
+   115a8:	e58d303c 	str	r3, [sp, #60]	; 0x3c
+
+                if (*fmt == '.') {
+                        fmt++;
+                        if (isdigit(*fmt)) {
+                                prec = 0;
+                                while(isdigit (*fmt)) {
+   115ac:	e59d3018 	ldr	r3, [sp, #24]
+   115b0:	e5d33000 	ldrb	r3, [r3]
+   115b4:	e353002f 	cmp	r3, #47	; 0x2f
+   115b8:	9a000003 	bls	115cc <vs_printf+0x258>
+   115bc:	e59d3018 	ldr	r3, [sp, #24]
+   115c0:	e5d33000 	ldrb	r3, [r3]
+   115c4:	e3530039 	cmp	r3, #57	; 0x39
+   115c8:	9affffea 	bls	11578 <vs_printf+0x204>
+                        }
+                }
+
+                if (*fmt == '.') {
+                        fmt++;
+                        if (isdigit(*fmt)) {
+   115cc:	ea00000c 	b	11604 <vs_printf+0x290>
+                                prec = 0;
+                                while(isdigit (*fmt)) {
+                                        prec = 10 * prec +ctod(*fmt++);
+
+                                }
+                        } else if (*fmt == '*') {
+   115d0:	e59d3018 	ldr	r3, [sp, #24]
+   115d4:	e5d33000 	ldrb	r3, [r3]
+   115d8:	e353002a 	cmp	r3, #42	; 0x2a
+   115dc:	1a000008 	bne	11604 <vs_printf+0x290>
+                                prec = va_arg(argp, int);
+   115e0:	e59d3014 	ldr	r3, [sp, #20]
+   115e4:	e2833004 	add	r3, r3, #4
+   115e8:	e58d3014 	str	r3, [sp, #20]
+   115ec:	e59d3014 	ldr	r3, [sp, #20]
+   115f0:	e5133004 	ldr	r3, [r3, #-4]
+   115f4:	e58d303c 	str	r3, [sp, #60]	; 0x3c
+                                fmt ++;
+   115f8:	e59d3018 	ldr	r3, [sp, #24]
+   115fc:	e2833001 	add	r3, r3, #1
+   11600:	e58d3018 	str	r3, [sp, #24]
+
+                        }
+                }
+
+                negflag = FALSE;
+   11604:	e3a03000 	mov	r3, #0
+   11608:	e58d3028 	str	r3, [sp, #40]	; 0x28
+
+                switch(*fmt) {
+   1160c:	e59d3018 	ldr	r3, [sp, #24]
+   11610:	e5d33000 	ldrb	r3, [r3]
+   11614:	e3530078 	cmp	r3, #120	; 0x78
+   11618:	979ff103 	ldrls	pc, [pc, r3, lsl #2]
+   1161c:	ea000177 	b	11c00 <vs_printf+0x88c>
+   11620:	00011bf0 	.word	0x00011bf0
+   11624:	00011c00 	.word	0x00011c00
+   11628:	00011c00 	.word	0x00011c00
+   1162c:	00011c00 	.word	0x00011c00
+   11630:	00011c00 	.word	0x00011c00
+   11634:	00011c00 	.word	0x00011c00
+   11638:	00011c00 	.word	0x00011c00
+   1163c:	00011c00 	.word	0x00011c00
+   11640:	00011c00 	.word	0x00011c00
+   11644:	00011c00 	.word	0x00011c00
+   11648:	00011c00 	.word	0x00011c00
+   1164c:	00011c00 	.word	0x00011c00
+   11650:	00011c00 	.word	0x00011c00
+   11654:	00011c00 	.word	0x00011c00
+   11658:	00011c00 	.word	0x00011c00
+   1165c:	00011c00 	.word	0x00011c00
+   11660:	00011c00 	.word	0x00011c00
+   11664:	00011c00 	.word	0x00011c00
+   11668:	00011c00 	.word	0x00011c00
+   1166c:	00011c00 	.word	0x00011c00
+   11670:	00011c00 	.word	0x00011c00
+   11674:	00011c00 	.word	0x00011c00
+   11678:	00011c00 	.word	0x00011c00
+   1167c:	00011c00 	.word	0x00011c00
+   11680:	00011c00 	.word	0x00011c00
+   11684:	00011c00 	.word	0x00011c00
+   11688:	00011c00 	.word	0x00011c00
+   1168c:	00011c00 	.word	0x00011c00
+   11690:	00011c00 	.word	0x00011c00
+   11694:	00011c00 	.word	0x00011c00
+   11698:	00011c00 	.word	0x00011c00
+   1169c:	00011c00 	.word	0x00011c00
+   116a0:	00011c00 	.word	0x00011c00
+   116a4:	00011c00 	.word	0x00011c00
+   116a8:	00011c00 	.word	0x00011c00
+   116ac:	00011c00 	.word	0x00011c00
+   116b0:	00011c00 	.word	0x00011c00
+   116b4:	00011c00 	.word	0x00011c00
+   116b8:	00011c00 	.word	0x00011c00
+   116bc:	00011c00 	.word	0x00011c00
+   116c0:	00011c00 	.word	0x00011c00
+   116c4:	00011c00 	.word	0x00011c00
+   116c8:	00011c00 	.word	0x00011c00
+   116cc:	00011c00 	.word	0x00011c00
+   116d0:	00011c00 	.word	0x00011c00
+   116d4:	00011c00 	.word	0x00011c00
+   116d8:	00011c00 	.word	0x00011c00
+   116dc:	00011c00 	.word	0x00011c00
+   116e0:	00011c00 	.word	0x00011c00
+   116e4:	00011c00 	.word	0x00011c00
+   116e8:	00011c00 	.word	0x00011c00
+   116ec:	00011c00 	.word	0x00011c00
+   116f0:	00011c00 	.word	0x00011c00
+   116f4:	00011c00 	.word	0x00011c00
+   116f8:	00011c00 	.word	0x00011c00
+   116fc:	00011c00 	.word	0x00011c00
+   11700:	00011c00 	.word	0x00011c00
+   11704:	00011c00 	.word	0x00011c00
+   11708:	00011c00 	.word	0x00011c00
+   1170c:	00011c00 	.word	0x00011c00
+   11710:	00011c00 	.word	0x00011c00
+   11714:	00011c00 	.word	0x00011c00
+   11718:	00011c00 	.word	0x00011c00
+   1171c:	00011c00 	.word	0x00011c00
+   11720:	00011c00 	.word	0x00011c00
+   11724:	00011c00 	.word	0x00011c00
+   11728:	00011804 	.word	0x00011804
+   1172c:	00011c00 	.word	0x00011c00
+   11730:	0001188c 	.word	0x0001188c
+   11734:	00011c00 	.word	0x00011c00
+   11738:	00011c00 	.word	0x00011c00
+   1173c:	00011c00 	.word	0x00011c00
+   11740:	00011c00 	.word	0x00011c00
+   11744:	00011c00 	.word	0x00011c00
+   11748:	00011c00 	.word	0x00011c00
+   1174c:	00011c00 	.word	0x00011c00
+   11750:	00011c00 	.word	0x00011c00
+   11754:	00011c00 	.word	0x00011c00
+   11758:	00011c00 	.word	0x00011c00
+   1175c:	0001190c 	.word	0x0001190c
+   11760:	00011c00 	.word	0x00011c00
+   11764:	00011c00 	.word	0x00011c00
+   11768:	00011c00 	.word	0x00011c00
+   1176c:	00011c00 	.word	0x00011c00
+   11770:	00011c00 	.word	0x00011c00
+   11774:	00011af4 	.word	0x00011af4
+   11778:	00011c00 	.word	0x00011c00
+   1177c:	00011c00 	.word	0x00011c00
+   11780:	00011b9c 	.word	0x00011b9c
+   11784:	00011c00 	.word	0x00011c00
+   11788:	00011c00 	.word	0x00011c00
+   1178c:	00011c00 	.word	0x00011c00
+   11790:	00011c00 	.word	0x00011c00
+   11794:	00011c00 	.word	0x00011c00
+   11798:	00011c00 	.word	0x00011c00
+   1179c:	00011c00 	.word	0x00011c00
+   117a0:	00011c00 	.word	0x00011c00
+   117a4:	00011c00 	.word	0x00011c00
+   117a8:	00011804 	.word	0x00011804
+   117ac:	00011858 	.word	0x00011858
+   117b0:	0001188c 	.word	0x0001188c
+   117b4:	00011c00 	.word	0x00011c00
+   117b8:	00011c00 	.word	0x00011c00
+   117bc:	00011c00 	.word	0x00011c00
+   117c0:	00011c00 	.word	0x00011c00
+   117c4:	00011c00 	.word	0x00011c00
+   117c8:	00011c00 	.word	0x00011c00
+   117cc:	00011c00 	.word	0x00011c00
+   117d0:	00011c00 	.word	0x00011c00
+   117d4:	00011c00 	.word	0x00011c00
+   117d8:	00011c00 	.word	0x00011c00
+   117dc:	0001190c 	.word	0x0001190c
+   117e0:	00011c00 	.word	0x00011c00
+   117e4:	00011c00 	.word	0x00011c00
+   117e8:	00011c00 	.word	0x00011c00
+   117ec:	00011960 	.word	0x00011960
+   117f0:	00011c00 	.word	0x00011c00
+   117f4:	00011af4 	.word	0x00011af4
+   117f8:	00011c00 	.word	0x00011c00
+   117fc:	00011c00 	.word	0x00011c00
+   11800:	00011b48 	.word	0x00011b48
+                        case 'b':
+                        case 'B':
+                                u = va_arg(argp, unsigned int);
+   11804:	e59d3014 	ldr	r3, [sp, #20]
+   11808:	e2833004 	add	r3, r3, #4
+   1180c:	e58d3014 	str	r3, [sp, #20]
+   11810:	e59d3014 	ldr	r3, [sp, #20]
+   11814:	e5133004 	ldr	r3, [r3, #-4]
+   11818:	e58d302c 	str	r3, [sp, #44]	; 0x2c
+                                buf = printnum(buf, u, 2, FALSE, length, ladjust, padc, 0);
+   1181c:	e59d3040 	ldr	r3, [sp, #64]	; 0x40
+   11820:	e58d3000 	str	r3, [sp]
+   11824:	e59d3038 	ldr	r3, [sp, #56]	; 0x38
+   11828:	e58d3004 	str	r3, [sp, #4]
+   1182c:	e5dd3037 	ldrb	r3, [sp, #55]	; 0x37
+   11830:	e58d3008 	str	r3, [sp, #8]
+   11834:	e3a03000 	mov	r3, #0
+   11838:	e58d300c 	str	r3, [sp, #12]
+   1183c:	e59d001c 	ldr	r0, [sp, #28]
+   11840:	e59d102c 	ldr	r1, [sp, #44]	; 0x2c
+   11844:	e3a02002 	mov	r2, #2
+   11848:	e3a03000 	mov	r3, #0
+   1184c:	ebfffe60 	bl	111d4 <printnum>
+   11850:	e58d001c 	str	r0, [sp, #28]
+                                break;
+   11854:	ea0000ef 	b	11c18 <vs_printf+0x8a4>
+
+                        case 'c':
+                                c = va_arg(argp, int);
+   11858:	e59d3014 	ldr	r3, [sp, #20]
+   1185c:	e2833004 	add	r3, r3, #4
+   11860:	e58d3014 	str	r3, [sp, #20]
+   11864:	e59d3014 	ldr	r3, [sp, #20]
+   11868:	e2433004 	sub	r3, r3, #4
+   1186c:	e5933000 	ldr	r3, [r3]
+   11870:	e5cd3027 	strb	r3, [sp, #39]	; 0x27
+                                *buf++ = c;
+   11874:	e59d301c 	ldr	r3, [sp, #28]
+   11878:	e2832001 	add	r2, r3, #1
+   1187c:	e58d201c 	str	r2, [sp, #28]
+   11880:	e5dd2027 	ldrb	r2, [sp, #39]	; 0x27
+   11884:	e5c32000 	strb	r2, [r3]
+                                break;
+   11888:	ea0000e2 	b	11c18 <vs_printf+0x8a4>
+
+                        case 'd':
+                        case 'D':
+                                n = va_arg(argp, int);
+   1188c:	e59d3014 	ldr	r3, [sp, #20]
+   11890:	e2833004 	add	r3, r3, #4
+   11894:	e58d3014 	str	r3, [sp, #20]
+   11898:	e59d3014 	ldr	r3, [sp, #20]
+   1189c:	e5133004 	ldr	r3, [r3, #-4]
+   118a0:	e58d3030 	str	r3, [sp, #48]	; 0x30
+                                if (n >= 0) {
+   118a4:	e59d3030 	ldr	r3, [sp, #48]	; 0x30
+   118a8:	e3530000 	cmp	r3, #0
+   118ac:	ba000002 	blt	118bc <vs_printf+0x548>
+                                        u = n;
+   118b0:	e59d3030 	ldr	r3, [sp, #48]	; 0x30
+   118b4:	e58d302c 	str	r3, [sp, #44]	; 0x2c
+   118b8:	ea000004 	b	118d0 <vs_printf+0x55c>
+                                } else {
+                                        u = -n;
+   118bc:	e59d3030 	ldr	r3, [sp, #48]	; 0x30
+   118c0:	e2633000 	rsb	r3, r3, #0
+   118c4:	e58d302c 	str	r3, [sp, #44]	; 0x2c
+                                        negflag = TRUE;
+   118c8:	e3a03001 	mov	r3, #1
+   118cc:	e58d3028 	str	r3, [sp, #40]	; 0x28
+                                }
+                                buf = printnum(buf, u, 10, negflag, length, ladjust, padc, 0);
+   118d0:	e59d3040 	ldr	r3, [sp, #64]	; 0x40
+   118d4:	e58d3000 	str	r3, [sp]
+   118d8:	e59d3038 	ldr	r3, [sp, #56]	; 0x38
+   118dc:	e58d3004 	str	r3, [sp, #4]
+   118e0:	e5dd3037 	ldrb	r3, [sp, #55]	; 0x37
+   118e4:	e58d3008 	str	r3, [sp, #8]
+   118e8:	e3a03000 	mov	r3, #0
+   118ec:	e58d300c 	str	r3, [sp, #12]
+   118f0:	e59d001c 	ldr	r0, [sp, #28]
+   118f4:	e59d102c 	ldr	r1, [sp, #44]	; 0x2c
+   118f8:	e3a0200a 	mov	r2, #10
+   118fc:	e59d3028 	ldr	r3, [sp, #40]	; 0x28
+   11900:	ebfffe33 	bl	111d4 <printnum>
+   11904:	e58d001c 	str	r0, [sp, #28]
+                                break;
+   11908:	ea0000c2 	b	11c18 <vs_printf+0x8a4>
+
+                        case 'o':
+                        case 'O':
+                                u = va_arg(argp, unsigned int);
+   1190c:	e59d3014 	ldr	r3, [sp, #20]
+   11910:	e2833004 	add	r3, r3, #4
+   11914:	e58d3014 	str	r3, [sp, #20]
+   11918:	e59d3014 	ldr	r3, [sp, #20]
+   1191c:	e5133004 	ldr	r3, [r3, #-4]
+   11920:	e58d302c 	str	r3, [sp, #44]	; 0x2c
+                                buf = printnum(buf, u, 8, FALSE, length, ladjust, padc, 0);
+   11924:	e59d3040 	ldr	r3, [sp, #64]	; 0x40
+   11928:	e58d3000 	str	r3, [sp]
+   1192c:	e59d3038 	ldr	r3, [sp, #56]	; 0x38
+   11930:	e58d3004 	str	r3, [sp, #4]
+   11934:	e5dd3037 	ldrb	r3, [sp, #55]	; 0x37
+   11938:	e58d3008 	str	r3, [sp, #8]
+   1193c:	e3a03000 	mov	r3, #0
+   11940:	e58d300c 	str	r3, [sp, #12]
+   11944:	e59d001c 	ldr	r0, [sp, #28]
+   11948:	e59d102c 	ldr	r1, [sp, #44]	; 0x2c
+   1194c:	e3a02008 	mov	r2, #8
+   11950:	e3a03000 	mov	r3, #0
+   11954:	ebfffe1e 	bl	111d4 <printnum>
+   11958:	e58d001c 	str	r0, [sp, #28]
+                                break;
+   1195c:	ea0000ad 	b	11c18 <vs_printf+0x8a4>
+
+                        case 's':
+                                p = va_arg(argp, char *);
+   11960:	e59d3014 	ldr	r3, [sp, #20]
+   11964:	e2833004 	add	r3, r3, #4
+   11968:	e58d3014 	str	r3, [sp, #20]
+   1196c:	e59d3014 	ldr	r3, [sp, #20]
+   11970:	e5133004 	ldr	r3, [r3, #-4]
+   11974:	e58d3044 	str	r3, [sp, #68]	; 0x44
+                                if (p == (char *)0) {
+   11978:	e59d3044 	ldr	r3, [sp, #68]	; 0x44
+   1197c:	e3530000 	cmp	r3, #0
+   11980:	1a000001 	bne	1198c <vs_printf+0x618>
+                                        p = "(NULL)";
+   11984:	e59f32bc 	ldr	r3, [pc, #700]	; 11c48 <vs_printf+0x8d4>
+   11988:	e58d3044 	str	r3, [sp, #68]	; 0x44
+                                }
+                                if (length > 0 && !ladjust) {
+   1198c:	e59d3040 	ldr	r3, [sp, #64]	; 0x40
+   11990:	e3530000 	cmp	r3, #0
+   11994:	da000027 	ble	11a38 <vs_printf+0x6c4>
+   11998:	e59d3038 	ldr	r3, [sp, #56]	; 0x38
+   1199c:	e3530000 	cmp	r3, #0
+   119a0:	1a000024 	bne	11a38 <vs_printf+0x6c4>
+                                        n = 0;
+   119a4:	e3a03000 	mov	r3, #0
+   119a8:	e58d3030 	str	r3, [sp, #48]	; 0x30
+                                        p2 = p;
+   119ac:	e59d3044 	ldr	r3, [sp, #68]	; 0x44
+   119b0:	e58d3020 	str	r3, [sp, #32]
+                                        for (; *p != '\0' && (prec == -1 || n < prec); p++) {
+   119b4:	ea000005 	b	119d0 <vs_printf+0x65c>
+                                                n++;
+   119b8:	e59d3030 	ldr	r3, [sp, #48]	; 0x30
+   119bc:	e2833001 	add	r3, r3, #1
+   119c0:	e58d3030 	str	r3, [sp, #48]	; 0x30
+                                        p = "(NULL)";
+                                }
+                                if (length > 0 && !ladjust) {
+                                        n = 0;
+                                        p2 = p;
+                                        for (; *p != '\0' && (prec == -1 || n < prec); p++) {
+   119c4:	e59d3044 	ldr	r3, [sp, #68]	; 0x44
+   119c8:	e2833001 	add	r3, r3, #1
+   119cc:	e58d3044 	str	r3, [sp, #68]	; 0x44
+   119d0:	e59d3044 	ldr	r3, [sp, #68]	; 0x44
+   119d4:	e5d33000 	ldrb	r3, [r3]
+   119d8:	e3530000 	cmp	r3, #0
+   119dc:	0a000006 	beq	119fc <vs_printf+0x688>
+   119e0:	e59d303c 	ldr	r3, [sp, #60]	; 0x3c
+   119e4:	e3730001 	cmn	r3, #1
+   119e8:	0afffff2 	beq	119b8 <vs_printf+0x644>
+   119ec:	e59d2030 	ldr	r2, [sp, #48]	; 0x30
+   119f0:	e59d303c 	ldr	r3, [sp, #60]	; 0x3c
+   119f4:	e1520003 	cmp	r2, r3
+   119f8:	baffffee 	blt	119b8 <vs_printf+0x644>
+                                                n++;
+                                        }
+                                        p = p2;
+   119fc:	e59d3020 	ldr	r3, [sp, #32]
+   11a00:	e58d3044 	str	r3, [sp, #68]	; 0x44
+                                        while (n < length) {
+   11a04:	ea000007 	b	11a28 <vs_printf+0x6b4>
+                                                *buf++ = ' ';
+   11a08:	e59d301c 	ldr	r3, [sp, #28]
+   11a0c:	e2832001 	add	r2, r3, #1
+   11a10:	e58d201c 	str	r2, [sp, #28]
+   11a14:	e3a02020 	mov	r2, #32
+   11a18:	e5c32000 	strb	r2, [r3]
+                                                n++;
+   11a1c:	e59d3030 	ldr	r3, [sp, #48]	; 0x30
+   11a20:	e2833001 	add	r3, r3, #1
+   11a24:	e58d3030 	str	r3, [sp, #48]	; 0x30
+                                        p2 = p;
+                                        for (; *p != '\0' && (prec == -1 || n < prec); p++) {
+                                                n++;
+                                        }
+                                        p = p2;
+                                        while (n < length) {
+   11a28:	e59d2030 	ldr	r2, [sp, #48]	; 0x30
+   11a2c:	e59d3040 	ldr	r3, [sp, #64]	; 0x40
+   11a30:	e1520003 	cmp	r2, r3
+   11a34:	bafffff3 	blt	11a08 <vs_printf+0x694>
+                                                *buf++ = ' ';
+                                                n++;
+                                        }
+                                }
+                                n = 0;
+   11a38:	e3a03000 	mov	r3, #0
+   11a3c:	e58d3030 	str	r3, [sp, #48]	; 0x30
+                                while (*p != '\0') {
+   11a40:	ea000012 	b	11a90 <vs_printf+0x71c>
+                                        if (++n > prec && prec != -1) {
+   11a44:	e59d3030 	ldr	r3, [sp, #48]	; 0x30
+   11a48:	e2833001 	add	r3, r3, #1
+   11a4c:	e58d3030 	str	r3, [sp, #48]	; 0x30
+   11a50:	e59d2030 	ldr	r2, [sp, #48]	; 0x30
+   11a54:	e59d303c 	ldr	r3, [sp, #60]	; 0x3c
+   11a58:	e1520003 	cmp	r2, r3
+   11a5c:	da000003 	ble	11a70 <vs_printf+0x6fc>
+   11a60:	e59d303c 	ldr	r3, [sp, #60]	; 0x3c
+   11a64:	e3730001 	cmn	r3, #1
+   11a68:	0a000000 	beq	11a70 <vs_printf+0x6fc>
+                                                break;
+   11a6c:	ea00000b 	b	11aa0 <vs_printf+0x72c>
+                                        }
+                                        *buf++ = *p++;
+   11a70:	e59d301c 	ldr	r3, [sp, #28]
+   11a74:	e2832001 	add	r2, r3, #1
+   11a78:	e58d201c 	str	r2, [sp, #28]
+   11a7c:	e59d2044 	ldr	r2, [sp, #68]	; 0x44
+   11a80:	e2821001 	add	r1, r2, #1
+   11a84:	e58d1044 	str	r1, [sp, #68]	; 0x44
+   11a88:	e5d22000 	ldrb	r2, [r2]
+   11a8c:	e5c32000 	strb	r2, [r3]
+                                                *buf++ = ' ';
+                                                n++;
+                                        }
+                                }
+                                n = 0;
+                                while (*p != '\0') {
+   11a90:	e59d3044 	ldr	r3, [sp, #68]	; 0x44
+   11a94:	e5d33000 	ldrb	r3, [r3]
+   11a98:	e3530000 	cmp	r3, #0
+   11a9c:	1affffe8 	bne	11a44 <vs_printf+0x6d0>
+                                        if (++n > prec && prec != -1) {
+                                                break;
+                                        }
+                                        *buf++ = *p++;
+                                }
+                                if (n < length && ladjust) {
+   11aa0:	e59d2030 	ldr	r2, [sp, #48]	; 0x30
+   11aa4:	e59d3040 	ldr	r3, [sp, #64]	; 0x40
+   11aa8:	e1520003 	cmp	r2, r3
+   11aac:	aa00000f 	bge	11af0 <vs_printf+0x77c>
+   11ab0:	e59d3038 	ldr	r3, [sp, #56]	; 0x38
+   11ab4:	e3530000 	cmp	r3, #0
+   11ab8:	0a00000c 	beq	11af0 <vs_printf+0x77c>
+                                        while (n < length) {
+   11abc:	ea000007 	b	11ae0 <vs_printf+0x76c>
+                                                *buf++ = ' ';
+   11ac0:	e59d301c 	ldr	r3, [sp, #28]
+   11ac4:	e2832001 	add	r2, r3, #1
+   11ac8:	e58d201c 	str	r2, [sp, #28]
+   11acc:	e3a02020 	mov	r2, #32
+   11ad0:	e5c32000 	strb	r2, [r3]
+                                                n++;
+   11ad4:	e59d3030 	ldr	r3, [sp, #48]	; 0x30
+   11ad8:	e2833001 	add	r3, r3, #1
+   11adc:	e58d3030 	str	r3, [sp, #48]	; 0x30
+                                                break;
+                                        }
+                                        *buf++ = *p++;
+                                }
+                                if (n < length && ladjust) {
+                                        while (n < length) {
+   11ae0:	e59d2030 	ldr	r2, [sp, #48]	; 0x30
+   11ae4:	e59d3040 	ldr	r3, [sp, #64]	; 0x40
+   11ae8:	e1520003 	cmp	r2, r3
+   11aec:	bafffff3 	blt	11ac0 <vs_printf+0x74c>
+                                                *buf++ = ' ';
+                                                n++;
+                                        }
+                                }
+                                break;
+   11af0:	ea000048 	b	11c18 <vs_printf+0x8a4>
+                        
+                        case 'u':
+                        case 'U':
+                                u = va_arg(argp, unsigned int);
+   11af4:	e59d3014 	ldr	r3, [sp, #20]
+   11af8:	e2833004 	add	r3, r3, #4
+   11afc:	e58d3014 	str	r3, [sp, #20]
+   11b00:	e59d3014 	ldr	r3, [sp, #20]
+   11b04:	e5133004 	ldr	r3, [r3, #-4]
+   11b08:	e58d302c 	str	r3, [sp, #44]	; 0x2c
+                                buf = printnum(buf, u, 10, FALSE, length, ladjust, padc, 0);
+   11b0c:	e59d3040 	ldr	r3, [sp, #64]	; 0x40
+   11b10:	e58d3000 	str	r3, [sp]
+   11b14:	e59d3038 	ldr	r3, [sp, #56]	; 0x38
+   11b18:	e58d3004 	str	r3, [sp, #4]
+   11b1c:	e5dd3037 	ldrb	r3, [sp, #55]	; 0x37
+   11b20:	e58d3008 	str	r3, [sp, #8]
+   11b24:	e3a03000 	mov	r3, #0
+   11b28:	e58d300c 	str	r3, [sp, #12]
+   11b2c:	e59d001c 	ldr	r0, [sp, #28]
+   11b30:	e59d102c 	ldr	r1, [sp, #44]	; 0x2c
+   11b34:	e3a0200a 	mov	r2, #10
+   11b38:	e3a03000 	mov	r3, #0
+   11b3c:	ebfffda4 	bl	111d4 <printnum>
+   11b40:	e58d001c 	str	r0, [sp, #28]
+                                break;
+   11b44:	ea000033 	b	11c18 <vs_printf+0x8a4>
+
+                        case 'x':
+                                u = va_arg(argp, unsigned int);
+   11b48:	e59d3014 	ldr	r3, [sp, #20]
+   11b4c:	e2833004 	add	r3, r3, #4
+   11b50:	e58d3014 	str	r3, [sp, #20]
+   11b54:	e59d3014 	ldr	r3, [sp, #20]
+   11b58:	e5133004 	ldr	r3, [r3, #-4]
+   11b5c:	e58d302c 	str	r3, [sp, #44]	; 0x2c
+                                buf = printnum(buf, u, 16, FALSE, length, ladjust, padc, 0);
+   11b60:	e59d3040 	ldr	r3, [sp, #64]	; 0x40
+   11b64:	e58d3000 	str	r3, [sp]
+   11b68:	e59d3038 	ldr	r3, [sp, #56]	; 0x38
+   11b6c:	e58d3004 	str	r3, [sp, #4]
+   11b70:	e5dd3037 	ldrb	r3, [sp, #55]	; 0x37
+   11b74:	e58d3008 	str	r3, [sp, #8]
+   11b78:	e3a03000 	mov	r3, #0
+   11b7c:	e58d300c 	str	r3, [sp, #12]
+   11b80:	e59d001c 	ldr	r0, [sp, #28]
+   11b84:	e59d102c 	ldr	r1, [sp, #44]	; 0x2c
+   11b88:	e3a02010 	mov	r2, #16
+   11b8c:	e3a03000 	mov	r3, #0
+   11b90:	ebfffd8f 	bl	111d4 <printnum>
+   11b94:	e58d001c 	str	r0, [sp, #28]
+                                break;
+   11b98:	ea00001e 	b	11c18 <vs_printf+0x8a4>
+
+                        case 'X':
+                                u = va_arg(argp, unsigned int);
+   11b9c:	e59d3014 	ldr	r3, [sp, #20]
+   11ba0:	e2833004 	add	r3, r3, #4
+   11ba4:	e58d3014 	str	r3, [sp, #20]
+   11ba8:	e59d3014 	ldr	r3, [sp, #20]
+   11bac:	e5133004 	ldr	r3, [r3, #-4]
+   11bb0:	e58d302c 	str	r3, [sp, #44]	; 0x2c
+                                buf = printnum(buf, u, 16, FALSE, length, ladjust, padc, 1);
+   11bb4:	e59d3040 	ldr	r3, [sp, #64]	; 0x40
+   11bb8:	e58d3000 	str	r3, [sp]
+   11bbc:	e59d3038 	ldr	r3, [sp, #56]	; 0x38
+   11bc0:	e58d3004 	str	r3, [sp, #4]
+   11bc4:	e5dd3037 	ldrb	r3, [sp, #55]	; 0x37
+   11bc8:	e58d3008 	str	r3, [sp, #8]
+   11bcc:	e3a03001 	mov	r3, #1
+   11bd0:	e58d300c 	str	r3, [sp, #12]
+   11bd4:	e59d001c 	ldr	r0, [sp, #28]
+   11bd8:	e59d102c 	ldr	r1, [sp, #44]	; 0x2c
+   11bdc:	e3a02010 	mov	r2, #16
+   11be0:	e3a03000 	mov	r3, #0
+   11be4:	ebfffd7a 	bl	111d4 <printnum>
+   11be8:	e58d001c 	str	r0, [sp, #28]
+                                break;
+   11bec:	ea000009 	b	11c18 <vs_printf+0x8a4>
+
+                        case '\0':
+                                fmt--;
+   11bf0:	e59d3018 	ldr	r3, [sp, #24]
+   11bf4:	e2433001 	sub	r3, r3, #1
+   11bf8:	e58d3018 	str	r3, [sp, #24]
+                                break;
+   11bfc:	ea000005 	b	11c18 <vs_printf+0x8a4>
+
+                        default:
+                                *buf++ = *fmt;
+   11c00:	e59d301c 	ldr	r3, [sp, #28]
+   11c04:	e2832001 	add	r2, r3, #1
+   11c08:	e58d201c 	str	r2, [sp, #28]
+   11c0c:	e59d2018 	ldr	r2, [sp, #24]
+   11c10:	e5d22000 	ldrb	r2, [r2]
+   11c14:	e5c32000 	strb	r2, [r3]
+                }
+                fmt++;
+   11c18:	e59d3018 	ldr	r3, [sp, #24]
+   11c1c:	e2833001 	add	r3, r3, #1
+   11c20:	e58d3018 	str	r3, [sp, #24]
+        int             n;
+        unsigned int    u;
+        int             negflag;
+        char            c;
+
+        while (*fmt != '\0') {
+   11c24:	e59d3018 	ldr	r3, [sp, #24]
+   11c28:	e5d33000 	ldrb	r3, [r3]
+   11c2c:	e3530000 	cmp	r3, #0
+   11c30:	1afffdd5 	bne	1138c <vs_printf+0x18>
+                        default:
+                                *buf++ = *fmt;
+                }
+                fmt++;
+        }
+        *buf = '\0';
+   11c34:	e59d301c 	ldr	r3, [sp, #28]
+   11c38:	e3a02000 	mov	r2, #0
+   11c3c:	e5c32000 	strb	r2, [r3]
+}
+   11c40:	e28dd04c 	add	sp, sp, #76	; 0x4c
+   11c44:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+   11c48:	00012128 	.word	0x00012128
+
+00011c4c <GetSystemTimerBase>:
+ * GetSystemTimerBase
+ * ------------------
+ * return timer base address.
+ */
+int GetSystemTimerBase(){
+        return 0x20003000;
+   11c4c:	e59f3004 	ldr	r3, [pc, #4]	; 11c58 <GetSystemTimerBase+0xc>
+}
+   11c50:	e1a00003 	mov	r0, r3
+   11c54:	e12fff1e 	bx	lr
+   11c58:	20003000 	.word	0x20003000
+
+00011c5c <GetTimeStamp>:
+/*
+ * GetTimeStamp
+ * ------------
+ *  return lower 32 bits ticks
+ */
+int GetTimeStamp() {
+   11c5c:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   11c60:	e24dd00c 	sub	sp, sp, #12
+        int *timerBase = (int *)GetSystemTimerBase();
+   11c64:	ebfffff8 	bl	11c4c <GetSystemTimerBase>
+   11c68:	e1a03000 	mov	r3, r0
+   11c6c:	e58d3004 	str	r3, [sp, #4]
+        return *(timerBase+1);
+   11c70:	e59d3004 	ldr	r3, [sp, #4]
+   11c74:	e5933004 	ldr	r3, [r3, #4]
+}
+   11c78:	e1a00003 	mov	r0, r3
+   11c7c:	e28dd00c 	add	sp, sp, #12
+   11c80:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+
+00011c84 <Wait>:
+ *  wait n ticks.
+ *
+ *  Paramters:
+ *  n: ticks number.
+ */
+void Wait(int n){
+   11c84:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   11c88:	e24dd014 	sub	sp, sp, #20
+   11c8c:	e58d0004 	str	r0, [sp, #4]
+        int start, end;
+
+        start = GetTimeStamp();
+   11c90:	ebfffff1 	bl	11c5c <GetTimeStamp>
+   11c94:	e58d000c 	str	r0, [sp, #12]
+        
+        /* Loop if time laspe is lower than wait time */
+        while(1){
+                end = GetTimeStamp();
+   11c98:	ebffffef 	bl	11c5c <GetTimeStamp>
+   11c9c:	e58d0008 	str	r0, [sp, #8]
+                if ((end - start) > n) { 
+   11ca0:	e59d2008 	ldr	r2, [sp, #8]
+   11ca4:	e59d300c 	ldr	r3, [sp, #12]
+   11ca8:	e0632002 	rsb	r2, r3, r2
+   11cac:	e59d3004 	ldr	r3, [sp, #4]
+   11cb0:	e1520003 	cmp	r2, r3
+   11cb4:	da000000 	ble	11cbc <Wait+0x38>
+                        break;
+   11cb8:	ea000000 	b	11cc0 <Wait+0x3c>
+                }
+        }
+   11cbc:	eafffff5 	b	11c98 <Wait+0x14>
+        
+}
+   11cc0:	e28dd014 	add	sp, sp, #20
+   11cc4:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+
+00011cc8 <reset_handler>:
+   11cc8:	e59f0048 	ldr	r0, [pc, #72]	; 11d18 <fiq_handler+0x4>
+   11ccc:	e3a01000 	mov	r1, #0
+   11cd0:	e8b003fc 	ldm	r0!, {r2, r3, r4, r5, r6, r7, r8, r9}
+   11cd4:	e8a103fc 	stmia	r1!, {r2, r3, r4, r5, r6, r7, r8, r9}
+   11cd8:	e8b003fc 	ldm	r0!, {r2, r3, r4, r5, r6, r7, r8, r9}
+   11cdc:	e8a103fc 	stmia	r1!, {r2, r3, r4, r5, r6, r7, r8, r9}
+   11ce0:	f10e0092 	cpsid	i,#18
+   11ce4:	e3a0d80b 	mov	sp, #720896	; 0xb0000
+   11ce8:	f10e009f 	cpsid	i,#31
+   11cec:	e3a0d80a 	mov	sp, #655360	; 0xa0000
+   11cf0:	eafffbf2 	b	10cc0 <main>
+
+00011cf4 <undef_handler>:
+   11cf4:	e1a00000 	nop			; (mov r0, r0)
+   11cf8:	eafffffd 	b	11cf4 <undef_handler>
+
+00011cfc <swi_handler>:
+   11cfc:	e1a00000 	nop			; (mov r0, r0)
+   11d00:	eafffffd 	b	11cfc <swi_handler>
+
+00011d04 <prefetch_handler>:
+   11d04:	e1a00000 	nop			; (mov r0, r0)
+   11d08:	eafffffd 	b	11d04 <prefetch_handler>
+
+00011d0c <abort_handler>:
+   11d0c:	e1a00000 	nop			; (mov r0, r0)
+   11d10:	eafffffd 	b	11d0c <abort_handler>
+
+00011d14 <fiq_handler>:
+   11d14:	e1a00000 	nop			; (mov r0, r0)
+   11d18:	00010000 	.word	0x00010000
+
+00011d1c <GetIRQController>:
+/*
+ * Get IRQ Controller
+ */
+
+irq_controller_t* GetIRQController(void) {
+        return (irq_controller_t*)INTR_BASE;
+   11d1c:	e59f3004 	ldr	r3, [pc, #4]	; 11d28 <GetIRQController+0xc>
+}
+   11d20:	e1a00003 	mov	r0, r3
+   11d24:	e12fff1e 	bx	lr
+   11d28:	2000b200 	.word	0x2000b200
+
+00011d2c <GetARMTimer>:
+
+/*
+ * Get ARM Timer
+ */
+arm_timer_t* GetARMTimer(void) {
+        return (arm_timer_t*)ARM_TIMER_BASE;
+   11d2c:	e59f3004 	ldr	r3, [pc, #4]	; 11d38 <GetARMTimer+0xc>
+}
+   11d30:	e1a00003 	mov	r0, r3
+   11d34:	e12fff1e 	bx	lr
+   11d38:	2000b400 	.word	0x2000b400
+
+00011d3c <enable_irq>:
+
+/* Enable IRQ */
+void enable_irq(int intr_no) {
+   11d3c:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   11d40:	e24dd00c 	sub	sp, sp, #12
+   11d44:	e58d0004 	str	r0, [sp, #4]
+    enabled_basic_irqs |= (1 << intr_no);    
+   11d48:	e3a02001 	mov	r2, #1
+   11d4c:	e59d3004 	ldr	r3, [sp, #4]
+   11d50:	e1a03312 	lsl	r3, r2, r3
+   11d54:	e1a02003 	mov	r2, r3
+   11d58:	e59f302c 	ldr	r3, [pc, #44]	; 11d8c <enable_irq+0x50>
+   11d5c:	e5933000 	ldr	r3, [r3]
+   11d60:	e1823003 	orr	r3, r2, r3
+   11d64:	e59f2020 	ldr	r2, [pc, #32]	; 11d8c <enable_irq+0x50>
+   11d68:	e5823000 	str	r3, [r2]
+    GetIRQController()->Enable_Basic_IRQs = (1 << intr_no);        
+   11d6c:	ebffffea 	bl	11d1c <GetIRQController>
+   11d70:	e1a01000 	mov	r1, r0
+   11d74:	e3a02001 	mov	r2, #1
+   11d78:	e59d3004 	ldr	r3, [sp, #4]
+   11d7c:	e1a03312 	lsl	r3, r2, r3
+   11d80:	e5813018 	str	r3, [r1, #24]
+}
+   11d84:	e28dd00c 	add	sp, sp, #12
+   11d88:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+   11d8c:	0001a170 	.word	0x0001a170
+
+00011d90 <clear_irq>:
+/* clear IRQ */ 
+void clear_irq(int intr_no) {
+   11d90:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   11d94:	e24dd00c 	sub	sp, sp, #12
+   11d98:	e58d0004 	str	r0, [sp, #4]
+    enabled_basic_irqs &= ~(1 << intr_no);
+   11d9c:	e3a02001 	mov	r2, #1
+   11da0:	e59d3004 	ldr	r3, [sp, #4]
+   11da4:	e1a03312 	lsl	r3, r2, r3
+   11da8:	e1e03003 	mvn	r3, r3
+   11dac:	e1a02003 	mov	r2, r3
+   11db0:	e59f3034 	ldr	r3, [pc, #52]	; 11dec <clear_irq+0x5c>
+   11db4:	e5933000 	ldr	r3, [r3]
+   11db8:	e0033002 	and	r3, r3, r2
+   11dbc:	e59f2028 	ldr	r2, [pc, #40]	; 11dec <clear_irq+0x5c>
+   11dc0:	e5823000 	str	r3, [r2]
+    GetIRQController()->Disable_Basic_IRQs |= (1 << intr_no);
+   11dc4:	ebffffd4 	bl	11d1c <GetIRQController>
+   11dc8:	e1a03000 	mov	r3, r0
+   11dcc:	e5932024 	ldr	r2, [r3, #36]	; 0x24
+   11dd0:	e3a00001 	mov	r0, #1
+   11dd4:	e59d1004 	ldr	r1, [sp, #4]
+   11dd8:	e1a01110 	lsl	r1, r0, r1
+   11ddc:	e1822001 	orr	r2, r2, r1
+   11de0:	e5832024 	str	r2, [r3, #36]	; 0x24
+}
+   11de4:	e28dd00c 	add	sp, sp, #12
+   11de8:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+   11dec:	0001a170 	.word	0x0001a170
+
+00011df0 <isr_dispatcher>:
+    Dispatch enabled interrupt routine
+    
+    TODO: This part of code better written in Assembly. To make sure no register is used by error.
+      
+*/                                
+void isr_dispatcher(void) {  
+   11df0:	e92d4008 	push	{r3, lr}
+        // Interrupt alreay disabled in irq_handler
+        temp_enabled_basic_irqs = enabled_basic_irqs;
+   11df4:	e59f30c0 	ldr	r3, [pc, #192]	; 11ebc <isr_dispatcher+0xcc>
+   11df8:	e5933000 	ldr	r3, [r3]
+   11dfc:	e59f20bc 	ldr	r2, [pc, #188]	; 11ec0 <isr_dispatcher+0xd0>
+   11e00:	e5823000 	str	r3, [r2]
+        
+        current_irq = 0;
+   11e04:	e59f30b8 	ldr	r3, [pc, #184]	; 11ec4 <isr_dispatcher+0xd4>
+   11e08:	e3a02000 	mov	r2, #0
+   11e0c:	e5832000 	str	r2, [r3]
+        while (temp_enabled_basic_irqs)
+   11e10:	ea000024 	b	11ea8 <isr_dispatcher+0xb8>
+        {
+            // Find enable irq
+            if ((temp_enabled_basic_irqs & 1) == 1) {
+   11e14:	e59f30a4 	ldr	r3, [pc, #164]	; 11ec0 <isr_dispatcher+0xd0>
+   11e18:	e5933000 	ldr	r3, [r3]
+   11e1c:	e2033001 	and	r3, r3, #1
+   11e20:	e3530000 	cmp	r3, #0
+   11e24:	0a000015 	beq	11e80 <isr_dispatcher+0x90>
+                // Check IRQ is pending or not
+                if ((((GetIRQController()->IRQ_Basic_Pending) & (1 << current_irq)) == 1) && (interrupts_table[current_irq] != NULL)) {
+   11e28:	ebffffbb 	bl	11d1c <GetIRQController>
+   11e2c:	e1a03000 	mov	r3, r0
+   11e30:	e5933000 	ldr	r3, [r3]
+   11e34:	e59f2088 	ldr	r2, [pc, #136]	; 11ec4 <isr_dispatcher+0xd4>
+   11e38:	e5922000 	ldr	r2, [r2]
+   11e3c:	e1a01002 	mov	r1, r2
+   11e40:	e3a02001 	mov	r2, #1
+   11e44:	e1a02112 	lsl	r2, r2, r1
+   11e48:	e0033002 	and	r3, r3, r2
+   11e4c:	e3530001 	cmp	r3, #1
+   11e50:	1a00000a 	bne	11e80 <isr_dispatcher+0x90>
+   11e54:	e59f3068 	ldr	r3, [pc, #104]	; 11ec4 <isr_dispatcher+0xd4>
+   11e58:	e5933000 	ldr	r3, [r3]
+   11e5c:	e59f2064 	ldr	r2, [pc, #100]	; 11ec8 <isr_dispatcher+0xd8>
+   11e60:	e7923103 	ldr	r3, [r2, r3, lsl #2]
+   11e64:	e3530000 	cmp	r3, #0
+   11e68:	0a000004 	beq	11e80 <isr_dispatcher+0x90>
+                    interrupts_table[current_irq]();    
+   11e6c:	e59f3050 	ldr	r3, [pc, #80]	; 11ec4 <isr_dispatcher+0xd4>
+   11e70:	e5933000 	ldr	r3, [r3]
+   11e74:	e59f204c 	ldr	r2, [pc, #76]	; 11ec8 <isr_dispatcher+0xd8>
+   11e78:	e7923103 	ldr	r3, [r2, r3, lsl #2]
+   11e7c:	e12fff33 	blx	r3
+                }
+            }
+            temp_enabled_basic_irqs = temp_enabled_basic_irqs >> 1;
+   11e80:	e59f3038 	ldr	r3, [pc, #56]	; 11ec0 <isr_dispatcher+0xd0>
+   11e84:	e5933000 	ldr	r3, [r3]
+   11e88:	e1a030a3 	lsr	r3, r3, #1
+   11e8c:	e59f202c 	ldr	r2, [pc, #44]	; 11ec0 <isr_dispatcher+0xd0>
+   11e90:	e5823000 	str	r3, [r2]
+            current_irq += 1;
+   11e94:	e59f3028 	ldr	r3, [pc, #40]	; 11ec4 <isr_dispatcher+0xd4>
+   11e98:	e5933000 	ldr	r3, [r3]
+   11e9c:	e2833001 	add	r3, r3, #1
+   11ea0:	e59f201c 	ldr	r2, [pc, #28]	; 11ec4 <isr_dispatcher+0xd4>
+   11ea4:	e5823000 	str	r3, [r2]
+void isr_dispatcher(void) {  
+        // Interrupt alreay disabled in irq_handler
+        temp_enabled_basic_irqs = enabled_basic_irqs;
+        
+        current_irq = 0;
+        while (temp_enabled_basic_irqs)
+   11ea8:	e59f3010 	ldr	r3, [pc, #16]	; 11ec0 <isr_dispatcher+0xd0>
+   11eac:	e5933000 	ldr	r3, [r3]
+   11eb0:	e3530000 	cmp	r3, #0
+   11eb4:	1affffd6 	bne	11e14 <isr_dispatcher+0x24>
+                }
+            }
+            temp_enabled_basic_irqs = temp_enabled_basic_irqs >> 1;
+            current_irq += 1;
+        }
+}
+   11eb8:	e8bd8008 	pop	{r3, pc}
+   11ebc:	0001a170 	.word	0x0001a170
+   11ec0:	0001a174 	.word	0x0001a174
+   11ec4:	0001a178 	.word	0x0001a178
+   11ec8:	0001a510 	.word	0x0001a510
+
+00011ecc <isr_timer>:
+
+/* timer isr */                       
+void isr_timer(void) {    
+   11ecc:	e92d4008 	push	{r3, lr}
+        asm volatile("nop");
+   11ed0:	e320f000 	nop	{0}
+        asm volatile("nop");
+   11ed4:	e320f000 	nop	{0}
+        asm volatile("nop");
+   11ed8:	e320f000 	nop	{0}
+        // Acknowledged we handled the irq
+        GetARMTimer()->IRQ_Clear = 1;
+   11edc:	ebffff92 	bl	11d2c <GetARMTimer>
+   11ee0:	e1a02000 	mov	r2, r0
+   11ee4:	e3a03001 	mov	r3, #1
+   11ee8:	e582300c 	str	r3, [r2, #12]
+        resign();
+   11eec:	ebfff8f8 	bl	102d4 <resign>
+}
+   11ef0:	e8bd8008 	pop	{r3, pc}
+
+00011ef4 <init_timer>:
+
+/* Init timer */
+void init_timer(void){
+   11ef4:	e92d4008 	push	{r3, lr}
+        /* Setup tiemr interrupt service routine(ISR) */
+        interrupts_table[INTR_ARM_TIMER] = isr_timer;
+   11ef8:	e59f3030 	ldr	r3, [pc, #48]	; 11f30 <init_timer+0x3c>
+   11efc:	e59f2030 	ldr	r2, [pc, #48]	; 11f34 <init_timer+0x40>
+   11f00:	e5832000 	str	r2, [r3]
+                
+        // Enable receive timer interrupt IRQ 
+        enable_irq(INTR_ARM_TIMER);
+   11f04:	e3a00000 	mov	r0, #0
+   11f08:	ebffff8b 	bl	11d3c <enable_irq>
+
+        // Get Timer register address, based on BCM2835 document section 14.2 
+        // Setup Timer frequency around 1kHz 
+        // Get timer load to 1024 
+        GetARMTimer()->Load = 0x400;
+   11f0c:	ebffff86 	bl	11d2c <GetARMTimer>
+   11f10:	e1a02000 	mov	r2, r0
+   11f14:	e3a03b01 	mov	r3, #1024	; 0x400
+   11f18:	e5823000 	str	r3, [r2]
+        
+        // Enable Timer, send IRQ, no-prescale, use 32bit counter
+        GetARMTimer()->Control = INTR_TIMER_CTRL_23BIT | 
+   11f1c:	ebffff82 	bl	11d2c <GetARMTimer>
+   11f20:	e1a02000 	mov	r2, r0
+   11f24:	e3a030a2 	mov	r3, #162	; 0xa2
+   11f28:	e5823008 	str	r3, [r2, #8]
+                INTR_TIMER_CTRL_ENABLE |
+                INTR_TIMER_CTRL_INT_ENABLE |
+                INTR_TIMER_CTRL_PRESCALE_1;
+}
+   11f2c:	e8bd8008 	pop	{r3, pc}
+   11f30:	0001a510 	.word	0x0001a510
+   11f34:	00011ecc 	.word	0x00011ecc
+
+00011f38 <init_interrupts>:
+
+/* Initialize Interrupts */
+void init_interrupts(void){
+   11f38:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+   11f3c:	e24dd00c 	sub	sp, sp, #12
+        DISABLE_INTR();
+   11f40:	e10f0000 	mrs	r0, CPSR
+   11f44:	e3800080 	orr	r0, r0, #128	; 0x80
+   11f48:	e121f000 	msr	CPSR_c, r0
+        int i;
+        
+        for(i=0; i < INTERRUPTS_NUMBER; i++) {
+   11f4c:	e3a03000 	mov	r3, #0
+   11f50:	e58d3004 	str	r3, [sp, #4]
+   11f54:	ea000006 	b	11f74 <init_interrupts+0x3c>
+            interrupts_table[i] = NULL;         
+   11f58:	e59f2038 	ldr	r2, [pc, #56]	; 11f98 <init_interrupts+0x60>
+   11f5c:	e59d3004 	ldr	r3, [sp, #4]
+   11f60:	e3a01000 	mov	r1, #0
+   11f64:	e7821103 	str	r1, [r2, r3, lsl #2]
+/* Initialize Interrupts */
+void init_interrupts(void){
+        DISABLE_INTR();
+        int i;
+        
+        for(i=0; i < INTERRUPTS_NUMBER; i++) {
+   11f68:	e59d3004 	ldr	r3, [sp, #4]
+   11f6c:	e2833001 	add	r3, r3, #1
+   11f70:	e58d3004 	str	r3, [sp, #4]
+   11f74:	e59d3004 	ldr	r3, [sp, #4]
+   11f78:	e353003f 	cmp	r3, #63	; 0x3f
+   11f7c:	dafffff5 	ble	11f58 <init_interrupts+0x20>
+            interrupts_table[i] = NULL;         
+        }
+        
+        init_timer();
+   11f80:	ebffffdb 	bl	11ef4 <init_timer>
+        ENABLE_INTR();
+   11f84:	e10f0000 	mrs	r0, CPSR
+   11f88:	e3c00080 	bic	r0, r0, #128	; 0x80
+   11f8c:	e121f000 	msr	CPSR_c, r0
+}
+   11f90:	e28dd00c 	add	sp, sp, #12
+   11f94:	e49df004 	pop	{pc}		; (ldr pc, [sp], #4)
+   11f98:	0001a510 	.word	0x0001a510
+
+00011f9c <irq_handler>:
+   11f9c:	e24ee004 	sub	lr, lr, #4
+   11fa0:	f96d051f 	srsdb	sp!, #31
+   11fa4:	f10e009f 	cpsid	i,#31
+   11fa8:	e92d400f 	push	{r0, r1, r2, r3, lr}
+   11fac:	ebffff8f 	bl	11df0 <isr_dispatcher>
+   11fb0:	e8bd400f 	pop	{r0, r1, r2, r3, lr}
+   11fb4:	f8bd0a00 	rfeia	sp!
+
+00011fb8 <__aeabi_uidiv>:
+   11fb8:	e2512001 	subs	r2, r1, #1
+   11fbc:	012fff1e 	bxeq	lr
+   11fc0:	3a000036 	bcc	120a0 <__aeabi_uidiv+0xe8>
+   11fc4:	e1500001 	cmp	r0, r1
+   11fc8:	9a000022 	bls	12058 <__aeabi_uidiv+0xa0>
+   11fcc:	e1110002 	tst	r1, r2
+   11fd0:	0a000023 	beq	12064 <__aeabi_uidiv+0xac>
+   11fd4:	e311020e 	tst	r1, #-536870912	; 0xe0000000
+   11fd8:	01a01181 	lsleq	r1, r1, #3
+   11fdc:	03a03008 	moveq	r3, #8
+   11fe0:	13a03001 	movne	r3, #1
+   11fe4:	e3510201 	cmp	r1, #268435456	; 0x10000000
+   11fe8:	31510000 	cmpcc	r1, r0
+   11fec:	31a01201 	lslcc	r1, r1, #4
+   11ff0:	31a03203 	lslcc	r3, r3, #4
+   11ff4:	3afffffa 	bcc	11fe4 <__aeabi_uidiv+0x2c>
+   11ff8:	e3510102 	cmp	r1, #-2147483648	; 0x80000000
+   11ffc:	31510000 	cmpcc	r1, r0
+   12000:	31a01081 	lslcc	r1, r1, #1
+   12004:	31a03083 	lslcc	r3, r3, #1
+   12008:	3afffffa 	bcc	11ff8 <__aeabi_uidiv+0x40>
+   1200c:	e3a02000 	mov	r2, #0
+   12010:	e1500001 	cmp	r0, r1
+   12014:	20400001 	subcs	r0, r0, r1
+   12018:	21822003 	orrcs	r2, r2, r3
+   1201c:	e15000a1 	cmp	r0, r1, lsr #1
+   12020:	204000a1 	subcs	r0, r0, r1, lsr #1
+   12024:	218220a3 	orrcs	r2, r2, r3, lsr #1
+   12028:	e1500121 	cmp	r0, r1, lsr #2
+   1202c:	20400121 	subcs	r0, r0, r1, lsr #2
+   12030:	21822123 	orrcs	r2, r2, r3, lsr #2
+   12034:	e15001a1 	cmp	r0, r1, lsr #3
+   12038:	204001a1 	subcs	r0, r0, r1, lsr #3
+   1203c:	218221a3 	orrcs	r2, r2, r3, lsr #3
+   12040:	e3500000 	cmp	r0, #0
+   12044:	11b03223 	lsrsne	r3, r3, #4
+   12048:	11a01221 	lsrne	r1, r1, #4
+   1204c:	1affffef 	bne	12010 <__aeabi_uidiv+0x58>
+   12050:	e1a00002 	mov	r0, r2
+   12054:	e12fff1e 	bx	lr
+   12058:	03a00001 	moveq	r0, #1
+   1205c:	13a00000 	movne	r0, #0
+   12060:	e12fff1e 	bx	lr
+   12064:	e3510801 	cmp	r1, #65536	; 0x10000
+   12068:	21a01821 	lsrcs	r1, r1, #16
+   1206c:	23a02010 	movcs	r2, #16
+   12070:	33a02000 	movcc	r2, #0
+   12074:	e3510c01 	cmp	r1, #256	; 0x100
+   12078:	21a01421 	lsrcs	r1, r1, #8
+   1207c:	22822008 	addcs	r2, r2, #8
+   12080:	e3510010 	cmp	r1, #16
+   12084:	21a01221 	lsrcs	r1, r1, #4
+   12088:	22822004 	addcs	r2, r2, #4
+   1208c:	e3510004 	cmp	r1, #4
+   12090:	82822003 	addhi	r2, r2, #3
+   12094:	908220a1 	addls	r2, r2, r1, lsr #1
+   12098:	e1a00230 	lsr	r0, r0, r2
+   1209c:	e12fff1e 	bx	lr
+   120a0:	e3500000 	cmp	r0, #0
+   120a4:	13e00000 	mvnne	r0, #0
+   120a8:	ea000007 	b	120cc <__aeabi_idiv0>
+
+000120ac <__aeabi_uidivmod>:
+   120ac:	e3510000 	cmp	r1, #0
+   120b0:	0afffffa 	beq	120a0 <__aeabi_uidiv+0xe8>
+   120b4:	e92d4003 	push	{r0, r1, lr}
+   120b8:	ebffffbe 	bl	11fb8 <__aeabi_uidiv>
+   120bc:	e8bd4006 	pop	{r1, r2, lr}
+   120c0:	e0030092 	mul	r3, r2, r0
+   120c4:	e0411003 	sub	r1, r1, r3
+   120c8:	e12fff1e 	bx	lr
+
+000120cc <__aeabi_idiv0>:
+   120cc:	e12fff1e 	bx	lr

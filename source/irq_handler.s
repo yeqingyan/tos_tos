@@ -33,9 +33,9 @@ irq_handler:
         According to ARM Procedure Call Standard, before call interrupt service routine(ISR) we need 
         to store caller-save general purpose register, this include r0-r3, r12.  
         
-        Note, we do not need to push lr here, since lr have been pushed in srsdb instruction 
-              We do not push r12(ip, Intra procedure call scratch register), since we should not use this in TOS */
-    push {r0-r3}
+        Note, the lr we pushed at the beginning of irq_handler is the lr in IRQ mode, now since we back to SYS mode, we need to push lr in SYS mode. 
+        We do not push r12(ip, Intra procedure call scratch register), since we do not use this register in TOS */
+    push {r0-r3, lr}
     
     /* Through according to Procedure Call Standard for the ARM Architecture[AAPCS], eight byte stack alignment is a 
         requirement, but we do not do sp alignment, because when context swtich happened in isr_dispatcher function, when we back from isr_dispatcher, we do not know how to restore stack aligment */
@@ -48,7 +48,7 @@ irq_handler:
     /*
         Restore stored registers from SYS mode stack
     */
-    pop {r0-r3}
+    pop {r0-r3, lr}
     
     /*
         REF instruction load R14, SPSR on SYS stack into PC and CPSR register, ia means increment stack pointer
