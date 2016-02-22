@@ -27,8 +27,9 @@ PORT create_process (void (*ptr_to_new_proc) (PROCESS, PARAM), int prio, PARAM p
 {
         int i,j;
 
-        //TODO save interrupt
-
+        // DISABLE INTERRUPT
+        DISABLE_INTR();
+        
         for (i=0; i<MAX_PROCS; i++) {
                 if (pcb[i].used == FALSE)
                         break;
@@ -51,33 +52,35 @@ PORT create_process (void (*ptr_to_new_proc) (PROCESS, PARAM), int prio, PARAM p
         sp -= 4;
         poke_l(sp, (LONG)&pcb[i]);
 
-        //sp -= 4;
-        // TODO push EFLAGS here
-        //poke_l(sp, 0);
 
         /* push CS */
         // TODO: Need check for rapsberry pi CS
         //sp -= 4;
         //poke_l(sp, (LONG)8);
 
+        /* initialize r0 to r12 */
+        for (j=0; j<=12; j++){ 
+            sp -= 4;
+            poke_l(sp, 0);
+        }
+
         /* new process address, return address. */
         sp -= 4;
         poke_l(sp, (LONG)ptr_to_new_proc);
 
-        /* initialize r0 to r12 */
-        for (j=0; j<=12; j++){ 
-                sp -= 4;
-                poke_l(sp, 0);
-        }
-
+        sp -= 4;
+        /* Push CPSR here, set mode to SYS mode, enable irq, since enalbe irq is clear 7 bit of cpsr, so we do not need push anything here. */ 
+        poke_l(sp, 0x1f);
+        
         pcb[i].sp = sp;
         pcb[i].param_proc = &pcb[i];
         pcb[i].param_data = (void *)param;
         add_ready_queue(&pcb[i]);
-        WriteString("Create Process Done");
+        //WriteString("Create Process Done");
         /* TODO port related code */
 
         /* TODO enable interrupt here */
+        ENABLE_INTR();
         
         /* TODO return port here */
         return NULL;

@@ -1,3 +1,6 @@
+# The platform can be raspi or qemu
+PLATFORM := raspi
+
 ARMGNU ?= arm-none-eabi
 
 GCCARGS = -Wall -nostdinc -I./include -g -nostartfiles -fomit-frame-pointer -fno-defer-pop -mcpu=arm1176jzf-s
@@ -16,19 +19,30 @@ LIST = kernel.list
 # The name of the map file to generate.
 MAP = kernel.map
 
-# The names of all object files that must be generated. Deduced from the 
-# assembly code files in source.
-OBJECTS := $(patsubst $(SOURCE)%.c,$(BUILD)%.o,$(wildcard $(SOURCE)*.c)) $(patsubst $(SOURCE)%.s, $(BUILD)%.o, $(wildcard $(SOURCE)*.s))
+# The names of all object files
+OBJECTS := build/dispatch.o build/gpio.o build/main.o build/mem.o build/process.o build/stdlib.o build/systemTimer.o  build/start.o build/intr.o build/irq_handler.o
+#OBJECTS := $(patsubst $(SOURCE)%.c,$(BUILD)%.o,$(wildcard $(SOURCE)*.c)) $(patsubst $(SOURCE)%.s, $(BUILD)%.o, $(wildcard $(SOURCE)*.s))
+
+# Copy platform files
+PLATFORM_FILES = include/timer.h include/intr.h source/intr.c
+
+# Boot address for Raspberry Pi is 0x8000
+# Boot address for QEMU is 0x10000
+ifeq ($(PLATFORM), qemu)
+	BOOT_ADDRESS = 0x10000
+else ifeq ($(PLATFORM), raspi)
+	BOOT_ADDRESS = 0x10000
+endif
 
 # Rule to make everything.
-# Boot address for Raspberry Pi is 0x8000
-all: BOOT_ADDRESS = 0x8000
-all: $(TARGET) $(LIST)
+all: $(PLATFORM_FILES) $(TARGET) $(LIST)
 
-# Rule to make image for qemu
-# qemu boot start address is 0x10000
-qemu: BOOT_ADDRESS = 0x10000
-qemu: $(TARGET) $(LIST)
+# Copy platform files
+$(PLATFORM_FILES):
+	echo "Copy platform files"
+	cp -v platforms/$(PLATFORM)/timer.h include/timer.h
+	cp -v platforms/$(PLATFORM)/intr.h include/intr.h
+	cp -v platforms/$(PLATFORM)/intr.c source/intr.c
 
 # Rule to remake everything. Does not include clean.
 rebuild: all
@@ -63,3 +77,6 @@ clean :
 	-rm -f $(TARGET)
 	-rm -f $(LIST)
 	-rm -f $(MAP)
+	-rm -f include/timer.h
+	-rm -f include/intr.h
+	-rm -f source/intr.c
