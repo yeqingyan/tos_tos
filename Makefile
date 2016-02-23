@@ -1,5 +1,5 @@
 # The platform can be raspi or qemu
-PLATFORM := raspi
+PLATFORM := qemu
 
 ARMGNU ?= arm-none-eabi
 
@@ -31,18 +31,11 @@ PLATFORM_FILES = include/timer.h include/intr.h source/intr.c
 ifeq ($(PLATFORM), qemu)
 	BOOT_ADDRESS = 0x10000
 else ifeq ($(PLATFORM), raspi)
-	BOOT_ADDRESS = 0x10000
+	BOOT_ADDRESS = 0x8000
 endif
 
 # Rule to make everything.
-all: $(PLATFORM_FILES) $(TARGET) $(LIST)
-
-# Copy platform files
-$(PLATFORM_FILES):
-	echo "Copy platform files"
-	cp -v platforms/$(PLATFORM)/timer.h include/timer.h
-	cp -v platforms/$(PLATFORM)/intr.h include/intr.h
-	cp -v platforms/$(PLATFORM)/intr.c source/intr.c
+all: $(TARGET) $(LIST)
 
 # Rule to remake everything. Does not include clean.
 rebuild: all
@@ -77,6 +70,3 @@ clean :
 	-rm -f $(TARGET)
 	-rm -f $(LIST)
 	-rm -f $(MAP)
-	-rm -f include/timer.h
-	-rm -f include/intr.h
-	-rm -f source/intr.c
