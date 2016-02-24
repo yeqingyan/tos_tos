@@ -285,6 +285,8 @@ void GpioOutputSetup(int tos_bits, int tos_read, int tos_write) {
  *  0: Success 
  */
 int WriteString(char *str) {
+        /* When write to shm memory, context swtich should be disabled */
+        DISABLE_INTR();
         int value[BIT_LENGTH], ret;
         char* ptr = str;
         while(*ptr != '\0') {
@@ -302,6 +304,7 @@ int WriteString(char *str) {
                 error();
                 return -1;
         }
+        ENABLE_INTR();
         return 0;
 }
 /*
