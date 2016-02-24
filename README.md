@@ -1,2 +1,1 @@
-# raspi-c
-Raspi OS Using C
+Train OS - Bare metal operating system running on Raspi.
