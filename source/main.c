@@ -56,19 +56,26 @@ int main(){
    
         /* Setup GPIO pins */
         /* TERMINAL_BITS: 25, TERMINAL_READ: 7, TERMINAL_WRITE: 8 */
-        GpioInputSetup(25, 7, 8);
+        //GpioInputSetup(25, 7, 8);
         /* TOS_BITS: 14, TOS_READ: 18, TOS_WRITE: 15 */
-        GpioOutputSetup(14, 18, 15);
+        //GpioOutputSetup(14, 18, 15);
 
         init_process();
-        WriteString("Init Process Done");
+        //WriteString("Init Process Done");
         init_dispatcher();
-        WriteString("Init Dispatcher Done");
+        //WriteString("Init Dispatcher Done");
         init_interrupts();
-        create_process(test_process_1, 5, 42, "TEST PROCESS A");
-        create_process(test_process_2, 5, 42, "TEST PROCESS B");
-        while(1){
-        }
-        //resign();
+        init_framebuffer();
+        //create_process(test_process_1, 5, 42, "TEST PROCESS A");
+        //create_process(test_process_2, 5, 42, "TEST PROCESS B");
+        
+        
+        int color;
+        short*  fb_pointer;     /* color is 16 bit */
+        
+        int x, y;
+        DrawLine(20,20,500,500);
+        DrawCharacter('A', 0, 0);
+        while(1){};
         return 0;
 }

@@ -20,7 +20,7 @@ LIST = kernel.list
 MAP = kernel.map
 
 # The names of all object files
-OBJECTS := build/dispatch.o build/gpio.o build/main.o build/mem.o build/process.o build/stdlib.o build/systemTimer.o  build/start.o build/intr.o build/irq_handler.o
+OBJECTS := build/dispatch.o build/gpio.o build/main.o build/mem.o build/process.o build/stdlib.o build/systemTimer.o  build/start.o build/intr.o build/irq_handler.o build/framebuffer.o build/mailbox.o build/drawing.o build/font.o
 #OBJECTS := $(patsubst $(SOURCE)%.c,$(BUILD)%.o,$(wildcard $(SOURCE)*.c)) $(patsubst $(SOURCE)%.s, $(BUILD)%.o, $(wildcard $(SOURCE)*.s))
 
 # Copy platform files
@@ -60,6 +60,10 @@ $(BUILD)%.o: $(SOURCE)%.c $(BUILD)
 
 $(BUILD)%.o: $(SOURCE)%.s $(BUILD)
 	$(ARMGNU)-as -I./include $< -o $@
+    
+# Generate object file from binary    
+build/font.o : font/font.bin
+	$(ARMGNU)-objcopy -I binary -O elf32-littlearm -B arm font/font.bin build/font.o
 
 $(BUILD):
 	mkdir $@

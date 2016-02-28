@@ -131,5 +131,36 @@ void vs_printf(char *, const char*, va_list);
 /* interrupts initialize */                        
 void init_interrupts(void);  
 void irq_handler(void);
-                      
+
+/* framebuffer.c */
+typedef struct {
+        int p_width;            /* #0 Physical Width */
+        int p_height;           /* #4 Physical Height*/
+        int v_width;            /* #8 Virutal Width(Framebuffer width) */
+        int v_height;           /* #12 Virtual Height(Framebuffer height) */
+        int gpu_pitch;          /* #16 GPU - Pitch */
+        int bit_depth;          /* #20 Bit Depth (High Colour) */
+        int x;                  /* #24 X (number of pixels to skip in the top left corner of the screen when copying the framebuffer to screen) */
+        int y;                  /* #28 Y (same as X) */
+        int gpu_pointer;        /* #32 GPU - Pointer */
+        int gpu_size;           /* #36 GPU - Size */
+} FrameBufferInfo;
+extern FrameBufferInfo frameBufferInfo __attribute__ ((aligned (16), section(".data")));
+FrameBufferInfo* InitialiseFrameBuffer(int, int, int );
+void init_framebuffer(void);
+
+/* mailbox.c */
+int GetMailboxBase(void);
+void MailboxWrite(int, int);
+int MailboxRead(int);
+
+/* drawing.c */
+short foreColour;
+FrameBufferInfo* graphicsAddress;
+void SetForeColour(short);
+void SetGraphicsAddress(FrameBufferInfo*);
+void SetPixel(int, int);
+void DrawLine(int, int, int, int);
+void DrawCharacter(char, int, int);
+
 #endif
