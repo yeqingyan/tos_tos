@@ -115,22 +115,8 @@ void resign();
 
 
 /* stdlib.c */
-void charToBin(char, int*, const int);
+void charToBin(unsigned char, int*, const int);
 void vs_printf(char *, const char*, va_list);
-
-/* intr.c */
-#define ENABLE_INTR()   asm("mrs r0, cpsr"); \
-                        asm("bic r0, r0, #0x80"); \
-                        asm("msr cpsr_c, r0");
-
-        
-#define DISABLE_INTR()  asm("mrs r0, cpsr"); \
-                        asm("orr r0, r0, #0x80"); \
-                        asm("msr cpsr_c, r0");
-
-/* interrupts initialize */                        
-void init_interrupts(void);  
-void irq_handler(void);
 
 /* framebuffer.c */
 typedef struct {
@@ -150,17 +136,105 @@ FrameBufferInfo* InitialiseFrameBuffer(int, int, int );
 void init_framebuffer(void);
 
 /* mailbox.c */
-int GetMailboxBase(void);
-void MailboxWrite(int, int);
-int MailboxRead(int);
+int get_mailbox_base(void);
+void mailbox_write(int, int);
+int mailbox_read(int);
 
 /* drawing.c */
-short foreColour;
+#define CHARACTER_SIZE 16   /* Each character using 16 bytes */
+#define CHARACTER_WIDTH 8   /* Character is 8x16 */
+#define CHARACTER_HEIGHT 16
+short foreground_color;
+short background_color;
 FrameBufferInfo* graphicsAddress;
-void SetForeColour(short);
-void SetGraphicsAddress(FrameBufferInfo*);
-void SetPixel(int, int);
+WORD get_fore_colour();
+void set_fore_colour(short);
+WORD get_back_colour();
+void set_back_colour(short);
+void set_graphics_address(FrameBufferInfo*);
+void set_pixel(int, int);
+void clear_pixel(int, int);
+WORD get_pixel_16bit(int, int);
+void copy_pixel_16bit(int, int, int, int);
 void DrawLine(int, int, int, int);
-void DrawCharacter(char, int, int);
+void draw_character(char, int, int);
+
+/* window.c */
+typedef struct {
+  int  x, y;
+  int  width, height;
+  int  cursor_x, cursor_y;
+  char cursor_char;
+} WINDOW;
+
+extern WINDOW* kernel_window;
+
+void move_cursor(WINDOW* wnd, int x, int y);
+void remove_cursor(WINDOW* wnd);
+void show_cursor(WINDOW* wnd);
+void clear_window(WINDOW* wnd);
+void output_char(WINDOW* wnd, unsigned char ch);
+void output_string(WINDOW* wnd, const char *str);
+void wprintf(WINDOW* wnd, const char* fmt, ...);
+void kprintf(const char* fmt, ...);
+void copy_character(int, int, int, int);
+
+/* pacman.c */
+void init_pacman(WINDOW*, int);
+
+/* usb.c */
+// Library in libcsud.a
+extern int UsbInitialise();
+extern void UsbCheckForChange();
+extern unsigned int KeyboardGetAddress();
+extern int KeyboardGetKeyDown(unsigned int, int);
+extern int KeyboardPoll(unsigned int);
+extern BYTE KeyboardGetModifiers(unsigned int);
+BOOL key_was_down(int);
+void keyboard_update();
+extern int KeyboardCount();
+extern BYTE keys_normal[104];
+extern BYTE  keys_shift[104];
+int keyboard_get_char();
+void init_usb();
+extern unsigned int keyboard_address;
+extern short old_keys[6];
+
+/* ipc.c */
+#define MAX_PORTS (MAX_PROCS * 2)
+#define MAGIC_PORT 0x1234abcd
+
+typedef struct _PORT_DEF {
+    unsigned magic;             
+    unsigned used;              /* Port slot used? */
+    unsigned open;              /* Port open? */
+    PROCESS owner;              /* Owner of this port */
+    PROCESS blocked_list_head;  /* First local blocked process */
+    PROCESS blocked_list_tail;  /* Last local blocked process */
+    struct _PORT_DEF *next;     /* Next port */
+} PORT_DEF;
+
+PORT create_port();
+PORT create_new_port (PROCESS proc);
+void open_port (PORT port);
+void close_port (PORT port);
+void send (PORT dest_port, void* data);
+void message (PORT dest_port, void* data);
+void* receive (PROCESS* sender);
+void reply (PROCESS sender);
+void init_ipc();
+
+/* intr.c */                        
+void init_interrupts(void);  
+void irq_handler(void);
+#define ENABLE_INTR()   asm("mrs r0, cpsr"); \
+                        asm("bic r0, r0, #0x80"); \
+                        asm("msr cpsr_c, r0");
+
+        
+#define DISABLE_INTR()  asm("mrs r0, cpsr"); \
+                        asm("orr r0, r0, #0x80"); \
+                        asm("msr cpsr_c, r0");
+
 
 #endif

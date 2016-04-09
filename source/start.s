@@ -71,4 +71,4 @@ abort_handler:
         
 fiq_handler:
         nop
-        b fiq_handler                 
+        b fiq_handler

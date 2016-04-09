@@ -4,21 +4,18 @@
  * charToBin()
  * -----------
  *  Convert a ASCII character into decimal value, then put it into binary array
- *  For example, 'a' = 97, binary number is 01100001, the content of binary array will be [1,0,0,0,0,1,1,0]
+ *  For example, 'a' = 97, binary number is 01100001, the content of binary array will be [0,1,1,0,0,0,0,1]
  *
  *  Parameters:
  *  c: input char
  *  buf: output binary array
  *  length: the binary length
  *
- *  Note:
- *  The content of binary array is reversed. 
  */
-void charToBin(char c, int* buf, const int length) {
-        int i, mask;
-        mask = 1;
-        for (i=0; i<length; i++) {
-                *(buf+i) = ((int)c>>i)&mask; 
+void charToBin(unsigned char c, int* buf, const int length) {
+        int i, j;
+        for (i=0, j=length-1; i<length; i++, j--) {
+                *(buf+j) = (c >> i) & 1; 
         }
 }
 
@@ -52,7 +49,7 @@ char *printnum(char *b, unsigned int u, int base,
         digs = upcase ? up_digs : low_digs;
         do {
                 *p-- = digs[u % base];
-                //u /= base;
+                u /= base;
         } while (u != 0);
 
         if (negflag) {

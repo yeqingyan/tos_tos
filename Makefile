@@ -20,7 +20,7 @@ LIST = kernel.list
 MAP = kernel.map
 
 # The names of all object files
-OBJECTS := build/dispatch.o build/gpio.o build/main.o build/mem.o build/process.o build/stdlib.o build/systemTimer.o  build/start.o build/intr.o build/irq_handler.o build/framebuffer.o build/mailbox.o build/drawing.o build/font.o
+OBJECTS := build/dispatch.o build/gpio.o build/main.o build/mem.o build/process.o build/stdlib.o build/systemTimer.o  build/start.o build/intr.o build/irq_handler.o build/framebuffer.o build/mailbox.o build/drawing.o build/font.o build/pacman.o build/window.o build/usb.o build/ipc.o build/assert.o
 #OBJECTS := $(patsubst $(SOURCE)%.c,$(BUILD)%.o,$(wildcard $(SOURCE)*.c)) $(patsubst $(SOURCE)%.s, $(BUILD)%.o, $(wildcard $(SOURCE)*.s))
 
 # Copy platform files
@@ -49,8 +49,9 @@ $(TARGET) : $(BUILD)output.elf
 	$(ARMGNU)-objcopy $(BUILD)output.elf -O binary $(TARGET) 
 
 # Rule to make the elf file.
+# TODO add ,--no-wchar-size-warning if no error happened
 $(BUILD)output.elf : $(OBJECTS)
-	$(ARMGNU)-gcc $(GCCARGS) $(OBJECTS) -o $(BUILD)output.elf -Wl,--section-start,.init=$(BOOT_ADDRESS),--section-start,.stack=0xA0000,-Map=$(MAP)
+	$(ARMGNU)-gcc $(GCCARGS) $(OBJECTS) -o $(BUILD)output.elf -Wl,-L,.,-l,csud,--section-start,.init=$(BOOT_ADDRESS),--section-start,.stack=0xA0000,-Map=$(MAP)
 
 # Rule to make the object files.
 # Note by Yeqing:

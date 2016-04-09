@@ -290,7 +290,7 @@ int WriteString(char *str) {
         int value[BIT_LENGTH], ret;
         char* ptr = str;
         while(*ptr != '\0') {
-                charToBin(*ptr, value, BIT_LENGTH);
+                charToBin((unsigned char)*ptr, value, BIT_LENGTH);
                 ret = WriteChar(value, BIT_LENGTH);
                 if (ret == -1) {
                         error();
@@ -298,7 +298,7 @@ int WriteString(char *str) {
                 }
                 ptr += 1;
         }
-        charToBin('\0', value, BIT_LENGTH);
+        charToBin((unsigned char)'\0', value, BIT_LENGTH);
         ret = WriteChar(value, BIT_LENGTH);
         if (ret == -1) {
                 error();

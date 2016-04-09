@@ -1,31 +1,54 @@
 #include <kernel.h>
 
 extern unsigned char* _binary_font_font_bin_start;
+
+
+WORD get_fore_colour() {
+    return foreground_color;
+}
+
 /*
- * SetForeColour
+ * set_fore_colour
  * -------------
  * Parameters:
  * r0: Fore colour
  */
-void SetForeColour(short colour) {
-        if (colour > 0x10000)   /* colour should lower than 0x10000 */
-                return;
-        else
-                foreColour = colour;
+void set_fore_colour(short colour) {
+    if (colour > 0x10000)   /* colour should lower than 0x10000 */
+        return;
+    else
+        foreground_color = colour;
+}
+
+WORD get_back_colour() {
+    return background_color;
 }
 
 /*
- * SetGraphicsAddress
+ * set_back_colour
+ * -------------
+ * Parameters:
+ * r0: Back colour
+ */
+void set_back_colour(short colour) {
+    if (colour > 0x10000)   /* colour should lower than 0x10000 */
+        return;
+    else
+        background_color = colour;
+}
+
+/*
+ * set_graphics_address
  * ------------------
  * Parameters:
  * r0: Graphic Address
  */
-void SetGraphicsAddress(FrameBufferInfo* address) {
+void set_graphics_address(FrameBufferInfo* address) {
         graphicsAddress = address;
 }
 
 /*
- * SetPixel
+ * set_pixel
  * --------
  * This function only work for high color(16-bit)
  *
@@ -33,7 +56,7 @@ void SetGraphicsAddress(FrameBufferInfo* address) {
  * x: x coordinate
  * y: y coordinate
  */
-void SetPixel(int x, int y) {
+void set_pixel(int x, int y) {
         int height, width;
         short* gpu_pointer;
 
@@ -48,11 +71,77 @@ void SetPixel(int x, int y) {
         /* Compute the address of the pixel to write */
         gpu_pointer = (short *)graphicsAddress->gpu_pointer;
         width++;
-        *(gpu_pointer + (x + y * width)) = foreColour;  /* Calculate pixel position in memory */
+        *(gpu_pointer + (x + y * width)) = foreground_color;  /* Calculate pixel position in memory */
 ERROR:
         return ;
 }
 
+/*
+ * clear_pixel
+ * --------
+ * This function only work for high color(16-bit)
+ *
+ * Parameters:
+ * x: x coordinate
+ * y: y coordinate
+ */
+void clear_pixel(int x, int y) {
+        int height, width;
+        short* gpu_pointer;
+
+        height = graphicsAddress->p_height;     /* Get Height */
+        height--;
+        if (y > height) goto ERROR;
+
+        width = graphicsAddress->p_width;       /* Get Width */
+        width--;
+        if (x > width) goto ERROR;
+
+        /* Compute the address of the pixel to write */
+        gpu_pointer = (short *)graphicsAddress->gpu_pointer;
+        width++;
+        *(gpu_pointer + (x + y * width)) = background_color;  /* Calculate pixel position in memory */
+ERROR:
+        return ;
+}
+
+/*
+ * get_pixel_16bit
+ * ---------------
+ * Return pixel value(16bit) from location(x,y) on screen
+ *
+ * Parameters:
+ * x: x coordinate
+ * y: y coordinate 
+*/
+WORD get_pixel_16bit(int x, int y){
+        WORD* gpu_pointer;    
+    
+        if (y > (graphicsAddress->p_height-1)) goto ERROR;
+        if (x > (graphicsAddress->p_width-1)) goto ERROR; 
+        
+        gpu_pointer = (WORD *)graphicsAddress->gpu_pointer;
+        
+        return *(gpu_pointer + (x + y * graphicsAddress->p_width));
+ERROR:
+        return 0;               
+}
+
+/* copy_pixel_16bit */
+void copy_pixel_16bit(int src_x, int src_y, int des_x, int des_y) {
+        if (src_y > (graphicsAddress->p_height-1)) goto ERROR;
+        if (des_y > (graphicsAddress->p_height-1)) goto ERROR;
+        if (src_x > (graphicsAddress->p_width-1)) goto ERROR;
+        if (des_x > (graphicsAddress->p_width-1)) goto ERROR;
+        WORD* gpu_pointer;
+        
+        gpu_pointer = (WORD *)graphicsAddress->gpu_pointer;
+        
+        *(gpu_pointer + (des_x + des_y * graphicsAddress->p_width)) = *(gpu_pointer + (src_x + src_y * graphicsAddress->p_width));
+        return;
+ERROR:
+        return;             
+}
 /*
  * DrawLine
  * --------
@@ -91,7 +180,7 @@ void DrawLine(int x0, int y0, int x1, int y1) {
         error = error / 2;
 
         for(;;) {
-                SetPixel(x0, y0);
+                set_pixel(x0, y0);
                 if (x0 == x1 && y0 == y1) break;
                 error2 = error;
                 if (error2 > (0-deltax) ) {
@@ -106,7 +195,7 @@ void DrawLine(int x0, int y0, int x1, int y1) {
 }
 
 /* Draw character on screen */
-void DrawCharacter(char character, int x, int y) {
+void draw_character(char character, int x, int y) {
     /* Get the font binary address by run objdump -t build/font.o */
     unsigned char* font_addr = (unsigned char *)&_binary_font_font_bin_start;
     int row;
@@ -117,19 +206,23 @@ void DrawCharacter(char character, int x, int y) {
     }
     
     /* Each character have 16 bytes in font.bin */
-    font_addr += 16 * character;
+    font_addr += CHARACTER_SIZE * character;
     
-    for(row = 0; row<=15; row += 1) {
+    for(row = 0; row < CHARACTER_HEIGHT; row += 1) {
         bits = (unsigned int)peek_b((MEM_ADDR)(font_addr+row));
-        bit = 8;
+        bit = CHARACTER_WIDTH;
         do {
             bits = bits << 1;
             bit -= 1;
             if ((bits & 0x100) != 0) {
                 // Draw pixel
-                SetPixel(x+bit, y);
-            } 
+                set_pixel(x+bit, y);
+            } else {
+                clear_pixel(x+bit, y);
+            }
         } while (bit != 0);
         y += 1;  
     }          
 }
+
+//void DrawString()

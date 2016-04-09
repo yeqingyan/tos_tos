@@ -32,8 +32,8 @@ FrameBufferInfo* InitialiseFrameBuffer(int width, int height, int bit_depth){
 
         int frameBufferAddr = (int) frameBuffer;
         frameBufferAddr += 0x40000000;
-        MailboxWrite(frameBufferAddr, 1);       /* Write framebuffer to channel 1 */
-        response = MailboxRead(1);              /* Read response */
+        mailbox_write(frameBufferAddr, 1);       /* Write framebuffer to channel 1 */
+        response = mailbox_read(1);              /* Read response */
 
         if (response != 0)                      /* If response is not 0, return 0 indicate failure. */
                 return 0;
@@ -46,6 +46,10 @@ ERROR:
 void init_framebuffer(void) {
         FrameBufferInfo *p_framebuffer;
         p_framebuffer = InitialiseFrameBuffer(1024, 768, 16);
-        SetGraphicsAddress(p_framebuffer);    
-        SetForeColour(65535);
+        set_graphics_address(p_framebuffer);    
+        // Default foreground color: White
+        set_fore_colour(65535);
+        // Default background color: Black
+        set_back_colour(0);
+        
 }

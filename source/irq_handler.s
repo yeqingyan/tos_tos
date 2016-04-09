@@ -43,7 +43,7 @@ irq_handler:
     /* TODO Check memory barrier mentioned in BCM2835 */
     
     /* Call isr_dispatcher to handle interrupt */
-    bl isr_dispatcher 
+    bl isr_dispatcher
         
     /*
         Restore stored registers from SYS mode stack
@@ -55,3 +55,4 @@ irq_handler:
         after read from stack. ! means update value in sp after instruction.          
     */    
     rfeia sp!
+    

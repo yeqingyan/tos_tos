@@ -1,15 +1,15 @@
 #include <kernel.h>
 /*
- * GetMailboxBase
+ * get_mailbox_base
  * --------------
  *  return mailbox base address
  */
-int GetMailboxBase(){
+int get_mailbox_base(){
         return 0x2000B880;
 }
 
 /*
- * MailboxWrite
+ * mailbox_write
  * ------------
  * Write to mailbox
  *
@@ -17,7 +17,7 @@ int GetMailboxBase(){
  * content: message content, only use top 28 bits, lowest 4 bits should be 0
  * channel: mailbox using 4 bits.
  */
-void MailboxWrite(int content, int channel) {
+void mailbox_write(int content, int channel) {
         if (content & 0b1111) {   /* Make sure lowest 4 bits in r0 are all 0 */
                 goto ERROR;
         
@@ -25,7 +25,7 @@ void MailboxWrite(int content, int channel) {
         if (channel > 15)       /* Make sure mailbox is in 4 bits */
                 goto ERROR;
 
-        int* mailboxBase = (int*) GetMailboxBase();
+        int* mailboxBase = (int*) get_mailbox_base();
         int status;
 
         /* Write wait */
@@ -41,7 +41,7 @@ ERROR:
 }
 
 /*
- * MailboxRead
+ * mailbox_read
  * -----------
  * Function to read from mailbox
  *
@@ -51,11 +51,11 @@ ERROR:
  * Return:
  * read message
  */
-int MailboxRead(int channel) {
+int mailbox_read(int channel) {
         if (channel > 15)       /* Make sure mailbox is in 4 bits */
                 goto ERROR;
 
-        int* mailboxBase = (int*) GetMailboxBase();
+        int* mailboxBase = (int*) get_mailbox_base();
         int status, content, readChannel;
 
         while(1) {

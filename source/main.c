@@ -59,23 +59,19 @@ int main(){
         //GpioInputSetup(25, 7, 8);
         /* TOS_BITS: 14, TOS_READ: 18, TOS_WRITE: 15 */
         //GpioOutputSetup(14, 18, 15);
-
+        //debug();
         init_process();
         //WriteString("Init Process Done");
         init_dispatcher();
+        init_ipc();
         //WriteString("Init Dispatcher Done");
         init_interrupts();
         init_framebuffer();
         //create_process(test_process_1, 5, 42, "TEST PROCESS A");
         //create_process(test_process_2, 5, 42, "TEST PROCESS B");
+        init_usb();
+        //init_pacman(kernel_window, 2);
         
-        
-        int color;
-        short*  fb_pointer;     /* color is 16 bit */
-        
-        int x, y;
-        DrawLine(20,20,500,500);
-        DrawCharacter('A', 0, 0);
         while(1){};
         return 0;
 }
