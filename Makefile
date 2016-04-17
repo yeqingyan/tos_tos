@@ -20,11 +20,8 @@ LIST = kernel.list
 MAP = kernel.map
 
 # The names of all object files
-OBJECTS := build/dispatch.o build/gpio.o build/main.o build/mem.o build/process.o build/stdlib.o build/systemTimer.o  build/start.o build/intr.o build/irq_handler.o build/framebuffer.o build/mailbox.o build/drawing.o build/font.o build/pacman.o build/window.o build/usb.o build/ipc.o build/assert.o
+OBJECTS := build/dispatch.o build/gpio.o build/mem.o build/process.o build/stdlib.o build/systemTimer.o  build/start.o build/intr.o build/irq_handler.o build/mailbox.o build/font.o build/drawing.o build/pacman.o build/window.o build/assert.o build/framebuffer.o build/ipc.o build/usb.o build/test_dummy_1.o build/common.o
 #OBJECTS := $(patsubst $(SOURCE)%.c,$(BUILD)%.o,$(wildcard $(SOURCE)*.c)) $(patsubst $(SOURCE)%.s, $(BUILD)%.o, $(wildcard $(SOURCE)*.s))
-
-# Copy platform files
-PLATFORM_FILES = include/timer.h include/intr.h source/intr.c
 
 # Boot address for Raspberry Pi is 0x8000
 # Boot address for QEMU is 0x10000
@@ -35,7 +32,7 @@ else ifeq ($(PLATFORM), raspi)
 endif
 
 # Rule to make everything.
-all: $(TARGET) $(LIST)
+all: build/main.o $(TARGET) $(LIST) 
 
 # Rule to remake everything. Does not include clean.
 rebuild: all
@@ -50,8 +47,10 @@ $(TARGET) : $(BUILD)output.elf
 
 # Rule to make the elf file.
 # TODO add ,--no-wchar-size-warning if no error happened
+# USB -Wl,-L,.,-l,csud
 $(BUILD)output.elf : $(OBJECTS)
-	$(ARMGNU)-gcc $(GCCARGS) $(OBJECTS) -o $(BUILD)output.elf -Wl,-L,.,-l,csud,--section-start,.init=$(BOOT_ADDRESS),--section-start,.stack=0xA0000,-Map=$(MAP)
+	#$(ARMGNU)-gcc $(GCCARGS) $(OBJECTS) build/main.o -o $(BUILD)output.elf -Wl,-L,.,-l,csud,--section-start,.init=$(BOOT_ADDRESS),--section-start,.stack=0xA00000,-Map=$(MAP)
+	$(ARMGNU)-gcc -nostartfiles $(OBJECTS) build/main.o -o $(BUILD)output.elf -Wl,-L,.,-l,csud,--section-start,.init=$(BOOT_ADDRESS),--section-start,.stack=0xA00000,-Map=$(MAP)
 
 # Rule to make the object files.
 # Note by Yeqing:
@@ -63,11 +62,14 @@ $(BUILD)%.o: $(SOURCE)%.s $(BUILD)
 	$(ARMGNU)-as -I./include $< -o $@
     
 # Generate object file from binary    
-build/font.o : font/font.bin
+build/font.o: font/font.bin
 	$(ARMGNU)-objcopy -I binary -O elf32-littlearm -B arm font/font.bin build/font.o
 
 $(BUILD):
 	mkdir $@
+
+# Make tests
+tests: 
 
 # Rule to clean files.
 clean : 
