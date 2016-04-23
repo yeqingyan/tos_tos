@@ -1,5 +1,5 @@
 .section .init
-        .global _start
+.global _start
 
 /*
     Setup stack pointer
@@ -43,13 +43,13 @@ reset_handler:
         cpsid i, #0x12
         
         /* Setup Stack pointer for IRQ mode */
-        mov sp, #0xB0000
+        mov sp, #0xB00000
         
         /* Change back to SYS mode(0x1F) */
         cpsid i, #0x1F
         
         /* Setup Stack pointer for SYS mode */
-        mov sp, #0xA0000
+        mov sp, #0xA00000
         
         b main
         

@@ -3,8 +3,8 @@
  * ------------------
  * return timer base address.
  */
-int GetSystemTimerBase(){
-        return 0x20003000;
+int GetSystemTimerBase() {
+    return 0x20003000;
 }
 
 /*
@@ -13,8 +13,8 @@ int GetSystemTimerBase(){
  *  return lower 32 bits ticks
  */
 int GetTimeStamp() {
-        int *timerBase = (int *)GetSystemTimerBase();
-        return *(timerBase+1);
+    int *timerBase = (int *) GetSystemTimerBase();
+    return *(timerBase + 1);
 }
 
 /*
@@ -25,17 +25,17 @@ int GetTimeStamp() {
  *  Paramters:
  *  n: ticks number.
  */
-void Wait(int n){
-        int start, end;
+void Wait(int n) {
+    int start, end;
 
-        start = GetTimeStamp();
-        
-        /* Loop if time laspe is lower than wait time */
-        while(1){
-                end = GetTimeStamp();
-                if ((end - start) > n) { 
-                        break;
-                }
+    start = GetTimeStamp();
+
+    /* Loop if time laspe is lower than wait time */
+    while (1) {
+        end = GetTimeStamp();
+        if ((end - start) > n) {
+            break;
         }
-        
+    }
+
 }

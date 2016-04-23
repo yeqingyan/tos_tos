@@ -9,10 +9,9 @@
  *  addr: memory address
  *  value: value to store
  */
-void poke_b (MEM_ADDR addr, BYTE value)
-{
-        unsigned char *ptr = (unsigned char *) addr;
-        *ptr = value;
+void poke_b(MEM_ADDR addr, BYTE value) {
+    unsigned char *ptr = (unsigned char *) addr;
+    *ptr = value;
 }
 
 /*
@@ -24,10 +23,9 @@ void poke_b (MEM_ADDR addr, BYTE value)
  *  addr: memory address
  *  value: value to store
  */
-void poke_w (MEM_ADDR addr, WORD value)
-{
-        unsigned short *ptr = (unsigned short *) addr;
-        *ptr = value;
+void poke_w(MEM_ADDR addr, WORD value) {
+    unsigned short *ptr = (unsigned short *) addr;
+    *ptr = value;
 }
 
 /*
@@ -39,10 +37,9 @@ void poke_w (MEM_ADDR addr, WORD value)
  *  addr: memory address
  *  value: value to store
  */
-void poke_l (MEM_ADDR addr, LONG value)
-{
-        unsigned *ptr = (unsigned *)addr;
-        *ptr = value;
+void poke_l(MEM_ADDR addr, LONG value) {
+    unsigned *ptr = (unsigned *) addr;
+    *ptr = value;
 }
 
 /*
@@ -53,10 +50,9 @@ void poke_l (MEM_ADDR addr, LONG value)
  *  Parameters:
  *  addr: memory address
  */
-BYTE peek_b (MEM_ADDR addr) 
-{
-        unsigned char *ptr = (unsigned char *)addr;
-        return *ptr;
+BYTE peek_b(MEM_ADDR addr) {
+    unsigned char *ptr = (unsigned char *) addr;
+    return *ptr;
 }
 
 /*
@@ -67,10 +63,9 @@ BYTE peek_b (MEM_ADDR addr)
  *  Parameters:
  *  addr: memory address
  */
-WORD peek_w (MEM_ADDR addr)
-{
-        unsigned short *ptr = (unsigned short *) addr;
-        return *ptr;
+WORD peek_w(MEM_ADDR addr) {
+    unsigned short *ptr = (unsigned short *) addr;
+    return *ptr;
 }
 
 /*
@@ -81,8 +76,7 @@ WORD peek_w (MEM_ADDR addr)
  *  Parameters:
  *  addr: memory address
  */
-LONG peek_l (MEM_ADDR addr)
-{
-        unsigned *ptr = (unsigned *) addr;
-        return *ptr;
+LONG peek_l(MEM_ADDR addr) {
+    unsigned *ptr = (unsigned *) addr;
+    return *ptr;
 }

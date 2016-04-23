@@ -3,33 +3,46 @@
 #define HIGHEST_PRIORITY 7
 PROCESS active_proc;
 
-/* Ready queues for all eight priorites */
+/* Ready queues for all eight priorities */
 PCB *ready_queue[MAX_READY_QUEUES];
+/*
+ * The bits in ready_procs tell which ready queue is empty.
+ * The MSB of ready_procs corresponds to ready_queue[7].
+ */
+//unsigned ready_procs;
 
 /*
  * add_ready_queue()
  * -----------------
  *  The process pointed to by p is put the ready queue.
- *  The appropiate ready queue is determined by p->priority.
+ *  The appropriate ready queue is determined by p->priority.
  *
  *  Parameters:
  *  proc: process need to be added to the queue
  */
 void add_ready_queue(PROCESS proc) {
-    DISABLE_INTR();
-
-    if (ready_queue[proc->priority] == NULL) {
-        ready_queue[proc->priority] = proc;
+    int prio;
+    volatile unsigned int cpsr_flag;
+    
+    SAVE_CPSR_DIS_IRQ(cpsr_flag);
+    assert (proc->magic == MAGIC_PCB);
+    prio = proc->priority;
+    //kprintf("Add [%s] to ready queue\n", proc->name);
+    if (ready_queue[prio] == NULL) {
+        /* The only process on this priority level */
+        ready_queue[prio] = proc;
         proc->next = proc;
         proc->prev = proc;
+        //ready_procs |= 1 << prio;
     } else {
-        proc->next = ready_queue[proc->priority];
-        proc->prev = ready_queue[proc->priority]->prev;
-        ready_queue[proc->priority]->prev->next = proc;
-        ready_queue[proc->priority]->prev = proc;
+        /* Some other processes on this priority level */
+        proc->next = ready_queue[prio];
+        proc->prev = ready_queue[prio]->prev;
+        ready_queue[prio]->prev->next = proc;
+        ready_queue[prio]->prev = proc;
     }
-
-    ENABLE_INTR();
+    proc->state = STATE_READY;
+    RESUME_CPSR(cpsr_flag);
 }
 
 /*
@@ -41,23 +54,26 @@ void add_ready_queue(PROCESS proc) {
  *  proc: process need to remove from ready queue
  */
 void remove_ready_queue(PROCESS proc) {
-    DISABLE_INTR();
-
+    int prio;
+    volatile unsigned int cpsr_flag;
+    
+    SAVE_CPSR_DIS_IRQ(cpsr_flag);
+    assert (proc->magic == MAGIC_PCB);
+    prio = proc->priority;
+    //kprintf("Remove [%s] from ready queue, %d\n", proc->name, proc->state);
     if (proc->next == proc) {
-        ready_queue[proc->priority] = NULL;
-        proc->prev = NULL;
-        proc->next = NULL;
+        //kprintf("[%s] In priority %d, No process is available\n", proc->name, proc->priority);
+        //print_all_processes(kernel_window);
+
+        ready_queue[prio] = NULL;
+        //ready_procs &= ~(1 << prio);
     } else {
-        if (proc == ready_queue[proc->priority]) {
-            ready_queue[proc->priority] = proc->next;
-        }
-        proc->prev->next = proc->next;
+        ready_queue[prio] = proc->next;
         proc->next->prev = proc->prev;
-        proc->prev = NULL;
-        proc->next = NULL;
+        proc->prev->next = proc->next;
     }
 
-    ENABLE_INTR();
+    RESUME_CPSR(cpsr_flag);
 }
 
 /*
@@ -89,12 +105,12 @@ PROCESS dispatcher() {
  * resign()
  * --------
  *  The current process gives up the CPU voluntarily. The
- *  next running process is determined iva dispatcher().
+ *  next running process is determined via dispatcher().
  *  The stack of the calling process is setup such that is
  *  looks like on interrupt.
  *  
- * Use resign_impl helper function, so all code in resign are assembly 
- * and gcc compile won't add push/pop around the function.    
+ * Use resign_impl() helper function, so all code in resign are assembly 
+ * and GCC compile won't add push/pop around the function.    
  */
 void resign_impl() {
     active_proc = dispatcher();
@@ -103,31 +119,35 @@ void resign_impl() {
 void resign() {
     /* Save the content of the current process
      *
-     * Note: Push a list of register in stack, the lowest-numbered register to the lowest memory address
-     * through to the highest-numbered register to the highest memory address.
-     * The sp(r13) and pc(r15) register cannot be in the list. (From ARMv6 manual.)
+     * Note: Push a list of register in stack, the lowest-numbered register to 
+     * the lowest memory address through to the highest-numbered register to 
+     * the highest memory address. The SP(r13) and PC(r15) register cannot be 
+     * in the list. (From ARMv6 manual.)
      */
     asm("push {r0-r12, r14}");
 
-    /* Save cpsr register */
+    /* Save CPSR register */
     asm("mrs r12, cpsr");
     asm("push {r12}");
 
     /* Set active process */
-    asm("mov %[old_sp], %%sp": [old_sp] "=r"(active_proc->sp):);
+    asm("mov %[old_sp], %%sp" : [old_sp] "=r"(active_proc->sp) :);
     asm("bl resign_impl");
-    asm("mov %%sp, %[new_sp]" : :[new_sp] "r"(active_proc->sp));
+    asm("mov %%sp, %[new_sp]" : : [new_sp] "r"(active_proc->sp));
 
     /*
-     * Restore CPSR. Using cpsr_c to only change the CPSR control field.
-     * if the starting process is a new process, CPSR is set to SYS mode and enable interrupt at create_process.
-     * if the starting process is not a new process, we just use the cpsr we stored before.
+     * Restore CPSR. Using CPSR_C to only change the CPSR control field.
+     * if the starting process is a new process, CPSR is set to SYS mode and 
+     * enable interrupt at create_process. If the starting process is not a new
+     * process, we just use the CPSR we stored before.
      *
-     * TODO: For new process, we do not have a return/exit address, in the future, when we have the return/exit
-     * function, we setup the return address in create_process() and pop it to lr before pop pc register. For
-     * other process, we push a garbage value before call dispatcher, since lr will not be used in here. It is
-     * safe we pop the garbage value into lr here.
-    */
+     * TODO: For new process, we do not have a return/exit address, in the 
+     * future, when we have the return/exit function, we setup the return 
+     * address in create_process() and pop it to LR before pop PC register. For
+     * other process, we push a garbage value before call dispatcher, since LR 
+     * will not be used in here. It is safe we pop the garbage value into 
+     * LR here.
+     */
     asm("pop {r12}");
     asm("msr cpsr_c, r12");
 

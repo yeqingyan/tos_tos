@@ -1,4 +1,3 @@
-
 #include <kernel.h>
 
 #define MAZE_WIDTH  19
@@ -11,59 +10,55 @@ typedef struct {
 } GHOST;
 
 
-WINDOW* pacman_wnd;
+WINDOW *pacman_wnd;
 
 /* Since our font only support ASCII(0-127) now, so Extended ASCII code is disabled.*/
 char *maze[] = {
-    "+--------+--------+",
-    "|        |        |",
-    "| ++ +-+ | +-+ ++ |",
-    "| ++ +-+ | +-+ ++ |",
-    "|                 |",
-    "| -- | --+-- | -- |",
-    "|    |   |   |    |",
-    "+--- +--   --+ ---+",
-    "|        |        |",
-    "| -+ --- | --- +- |",
-    "|  |           |  |",
-    "+- | | --+-- | | -+",
-    "|    |   |   |    |",
-    "| ---+-- | --+--- |",
-    "|                 |",
-    "+-----------------+",
-    NULL
+        "+--------+--------+",
+        "|        |        |",
+        "| ++ +-+ | +-+ ++ |",
+        "| ++ +-+ | +-+ ++ |",
+        "|                 |",
+        "| -- | --+-- | -- |",
+        "|    |   |   |    |",
+        "+--- +--   --+ ---+",
+        "|        |        |",
+        "| -+ --- | --- +- |",
+        "|  |           |  |",
+        "+- | | --+-- | | -+",
+        "|    |   |   |    |",
+        "| ---+-- | --+--- |",
+        "|                 |",
+        "+-----------------+",
+        NULL
 };
 
 /* Now our font only support ASCII(0-127), so Extended ASCII code is disabled.*/
-void draw_maze_char(char maze_char)
-{
+void draw_maze_char(char maze_char) {
     output_char(pacman_wnd, maze_char);
 }
 
 
-
-void draw_maze()
-{
+void draw_maze() {
     int x, y;
     WORD color_backup;
-    
+
     clear_window(pacman_wnd);
     color_backup = get_fore_colour();
     y = 0;
     while (maze[y] != NULL) {
-	char* row = maze[y];
-	x = 0;
-	while (row[x] != '\0') {
-	    char ch = row[x];
-	    draw_maze_char(ch);
-	    x++;
-	}
-	y++;
+        char *row = maze[y];
+        x = 0;
+        while (row[x] != '\0') {
+            char ch = row[x];
+            draw_maze_char(ch);
+            x++;
+        }
+        y++;
     }
     set_fore_colour(color_backup);
     wprintf(pacman_wnd, "PacMan ");
 }
-
 
 
 // Pseudo random number generator
@@ -71,43 +66,39 @@ void draw_maze()
 int seed = 17489;
 int last_random_number = 0;
 
-int random()
-{
+int random() {
     last_random_number = (25173 * last_random_number + 13849) % 65536;
     return last_random_number;
 }
 
-void init_ghost(GHOST* ghost)
-{
+void init_ghost(GHOST *ghost) {
     while (1) {
-	int x = random() % MAZE_WIDTH;
-	int y = random() % MAZE_HEIGHT;
-	if (maze[y][x] != ' ') continue;    
-	ghost->x = x;
-	ghost->y = y;
-	break;
+        int x = random() % MAZE_WIDTH;
+        int y = random() % MAZE_HEIGHT;
+        if (maze[y][x] != ' ') continue;
+        ghost->x = x;
+        ghost->y = y;
+        break;
     }
 }
 
-
-void choose_random_direction(int* dx, int* dy)
-{
+void choose_random_direction(int *dx, int *dy) {
     *dx = 0;
     *dy = 0;
     int dir = random() % 4;
     switch (dir) {
-    case 0:
-	*dx = -1;
-	break;
-    case 1:
-	*dx = 1;
-	break;
-    case 2:
-	*dy = -1;
-	break;
-    case 3:
-	*dy = 1;
-	break;
+        case 0:
+            *dx = -1;
+            break;
+        case 1:
+            *dx = 1;
+            break;
+        case 2:
+            *dy = -1;
+            break;
+        case 3:
+            *dy = 1;
+            break;
     }
 }
 
@@ -153,8 +144,7 @@ void ghost_proc(PROCESS self, PARAM param)
 }
 
 */
-void init_pacman(WINDOW* wnd, int num_ghosts)
-{
+void init_pacman(WINDOW *wnd, int num_ghosts) {
     pacman_wnd = wnd;
     pacman_wnd->width = MAZE_WIDTH;
     pacman_wnd->height = MAZE_HEIGHT + 1;

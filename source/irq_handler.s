@@ -5,7 +5,7 @@ irq_handler:
     /* 
         According to ARM1176JZFS Manual 2.12.2 Exception entry and exit summary :
         When CPU into IRQ mode, the Link Register(R14) will have value PC+4, where PC is the address 
-        of the instruction that was NOT executed because the FIQ took priority. In order to return to 
+        of the instruction that was NOT executed because the IRQ took priority. In order to return to 
         the right address(PC), we need to minus R14 by 4 
     */ 
     sub lr, lr, #4
@@ -13,7 +13,7 @@ irq_handler:
     /*
         SRS instruction store R14 and SPSR of the IRQ mode into SYS_R13(Stack Pointer in SYS Mode), 
         0x1f mean SYS mode.
-        db means addressing mode is Decrement Before, cpu will decrement the stack pointer before store
+        "db" means addressing mode is Decrement Before, cpu will decrement the stack pointer before store
         value into stack. ! means after store R14 and SPSR of the IRQ mode into SYS mode stack, update the 
         stack pointer SYS_R13.
         
@@ -26,6 +26,10 @@ irq_handler:
     /*
         CPS instruction change proces state to SYS mode(0x1f), id means interrupt disable.
         i means disable IRQ.
+        
+        Note: When CPU enter IRQ mode, the IRQ will be disabled. so we do not need to worry that nested IRQ
+        will be triggered before this instruction. Reference "ARM architecture Reference Manual A2.6.8 Interrupt 
+        request exception."
     */    
     cpsid i, #0x1f
     

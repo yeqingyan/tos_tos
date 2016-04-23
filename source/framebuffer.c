@@ -1,55 +1,61 @@
 #include <kernel.h>
-/*
- * InitialiseFrameBuffer
- * ---------------------
- * Parameters
- * width
- * height
- * bit depth
- *
- * Return
- * Pointer to framebuffer info. Return 0 if failed.
- */
+
 FrameBufferInfo frameBufferInfo;
 
-FrameBufferInfo* InitialiseFrameBuffer(int width, int height, int bit_depth){
-        if (width > 4096) goto ERROR;           /* Width should less than 4096 */
-        if (height > 4096) goto ERROR;          /* Height should less than 4096 */
-        if (bit_depth > 32) goto ERROR;         /* Bit depth should less than 32 bits */
-        int response;
+/*
+ * init_framebuffer()
+ * ---------------------
+ *  Set up frame buffer.
+ *
+ *  Parameters:
+ *  width:          Frame buffer width(less than 4096)
+ *  height:         Frame buffer height(less than 4096)
+ *  bit_depth:      less than 32 bits
+ *
+ *  Return:
+ *  Pointer to frame buffer info. Return 0 if failed.
+ */
+FrameBufferInfo *init_framebuffer(int width, int height, int bit_depth) {
+    if (width > 4096) goto ERROR;
+    if (height > 4096) goto ERROR;
+    if (bit_depth > 32) goto ERROR;
+    int response;
 
-        FrameBufferInfo *frameBuffer = &frameBufferInfo;
-        frameBuffer->p_width = width;
-        frameBuffer->p_height = height;
-        frameBuffer->v_width = width;
-        frameBuffer->v_height = height;
-        frameBuffer->gpu_pitch = 0;
-        frameBuffer->bit_depth = bit_depth;
-        frameBuffer->x = 0;
-        frameBuffer->y = 0;
-        frameBuffer->gpu_pointer = 0;
-        frameBuffer->gpu_size = 0;
+    FrameBufferInfo *frameBuffer = &frameBufferInfo;
+    frameBuffer->p_width = width;
+    frameBuffer->p_height = height;
+    frameBuffer->v_width = width;
+    frameBuffer->v_height = height;
+    frameBuffer->gpu_pitch = 0;
+    frameBuffer->bit_depth = bit_depth;
+    frameBuffer->x = 0;
+    frameBuffer->y = 0;
+    frameBuffer->gpu_pointer = 0;
+    frameBuffer->gpu_size = 0;
 
-        int frameBufferAddr = (int) frameBuffer;
-        frameBufferAddr += 0x40000000;
-        mailbox_write(frameBufferAddr, 1);       /* Write framebuffer to channel 1 */
-        response = mailbox_read(1);              /* Read response */
+    int frameBufferAddr = (int) frameBuffer;
+    frameBufferAddr += 0x40000000;
+    /* Write frame buffer to channel 1 */
+    mailbox_write(frameBufferAddr, 1);      
+    response = mailbox_read(1);
 
-        if (response != 0)                      /* If response is not 0, return 0 indicate failure. */
-                return 0;
-
-        return frameBuffer;
-ERROR:
+    if (response != 0)
         return 0;
+
+    return frameBuffer;
+    ERROR:
+    return 0;
 }
 
-void init_framebuffer(void) {
-        FrameBufferInfo *p_framebuffer;
-        p_framebuffer = InitialiseFrameBuffer(1024, 768, 16);
-        set_graphics_address(p_framebuffer);    
-        // Default foreground color: White
-        set_fore_colour(65535);
-        // Default background color: Black
-        set_back_colour(0);
-        
+/*
+ * init_video()
+ * ------------
+ * Setup frame buffer, background color, foreground color.
+ */
+void init_video(void) {
+    FrameBufferInfo *p_framebuffer;
+    p_framebuffer = init_framebuffer(1024, 768, 16);
+    set_graphics_address(p_framebuffer);
+    set_fore_colour(COLOR_WHITE);
+    set_back_colour(COLOR_BLACK);
 }

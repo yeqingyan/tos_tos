@@ -5,3 +5,7 @@ build/
 *.list
 *.log
 *.o
+.idea/
+.vscode/
+nbproject/
+slide

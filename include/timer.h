@@ -5,15 +5,15 @@
 /* Timer registers offset from BCM2835 Section 14.2 Timer Registers */
 #define ARM_TIMER_BASE  0x2000B400
 typedef volatile struct {
-        LONG Load;
-        LONG Value;
-        LONG Control;
-        LONG IRQ_Clear;
-        LONG RAW_IRQ;
-        LONG Masked_IRQ;
-        LONG Reload;
-        LONG Pre_Divider;
-        LONG Free_Running_Counter;
+    LONG Load;
+    LONG Value;
+    LONG Control;
+    LONG IRQ_Clear;
+    LONG RAW_IRQ;
+    LONG Masked_IRQ;
+    LONG Reload;
+    LONG Pre_Divider;
+    LONG Free_Running_Counter;
 } arm_timer_t;
 
 #define INTR_TIMER_CTRL_23BIT           (1 << 1) // Use 23-bit counter(it should be 32-bit)
@@ -25,4 +25,5 @@ typedef volatile struct {
 #define INTR_ARM_TIMER                  0
 
 void init_interrupts(void);
+
 #endif
