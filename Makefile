@@ -1,9 +1,9 @@
 # The platform can be raspi or qemu
-PLATFORM := raspi
+PLATFORM := qemu
 
 ARMGNU ?= arm-none-eabi
 
-GCCARGS =  -Wall -nostdinc -I./include -g -nostartfiles -fomit-frame-pointer -fno-defer-pop -mcpu=arm1176jzf-s
+GCCARGS =  -Wall -nostdinc -I./include -g -fomit-frame-pointer -fno-defer-pop -mcpu=arm1176jzf-s
 # The intermediate directory for compiled object files.
 BUILD = build/
 
@@ -20,7 +20,7 @@ LIST = kernel.list
 MAP = kernel.map
 
 # The names of all object files
-OBJECTS := build/dispatch.o build/gpio.o build/mem.o build/process.o build/stdlib.o build/systemTimer.o  build/start.o build/intr.o build/irq_handler.o build/mailbox.o build/font.o build/drawing.o build/pacman.o build/window.o build/assert.o build/framebuffer.o build/ipc.o build/usb.o build/shell.o build/keyb.o
+OBJECTS := build/dispatch.o build/gpio.o build/mem.o build/process.o build/stdlib.o build/systemTimer.o  build/start.o build/intr.o build/irq_handler.o build/mailbox.o build/font.o build/drawing.o build/pacman.o build/window.o build/assert.o build/framebuffer.o build/ipc.o build/usb.o build/shell.o build/keyb.o build/video_test.o
 #build/test_dummy_1.o build/common.o 
 #OBJECTS := $(patsubst $(SOURCE)%.c,$(BUILD)%.o,$(wildcard $(SOURCE)*.c)) $(patsubst $(SOURCE)%.s, $(BUILD)%.o, $(wildcard $(SOURCE)*.s))
 

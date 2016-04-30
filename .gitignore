@@ -9,3 +9,6 @@ build/
 .vscode/
 nbproject/
 slide
+*.bak
+test/
+*.jar

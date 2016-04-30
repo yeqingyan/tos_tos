@@ -17,7 +17,7 @@ typedef int BOOL;
 #define MSG_SENT        1
 #define MSG_RECEIVED    1
 
-int main();
+int kernel_main();
 
 /* gpio.c */
 #define GPIO_BASE       0x20200000
@@ -218,9 +218,13 @@ int mailbox_read(int);
 #define COLOR_BLACK     0x0000     
 #define COLOR_GREEN     0x07E0
 #define COLOR_WHITE     0xFFFF
+#define COLOR_RED       0xF800
 
 #define CHARACTER_SIZE 16   /* Each character using 16 bytes */
 #define CHARACTER_WIDTH 8   /* Character is 8x16 */
+#define SCREEN_WIDTH     80
+#define SCREEN_HEIGHT    25
+
 #define CHARACTER_HEIGHT 16
 short foreground_color;
 short background_color;
@@ -248,8 +252,11 @@ void DrawLine(int, int, int, int);
 
 void draw_character(char, int, int);
 
+void draw_line(int, int, int, int, unsigned short);
 /* pacman.c */
 void init_pacman(WINDOW *, int);
+
+int random();
 
 /* keyb.c */
 typedef struct _Keyb_Message {
@@ -355,4 +362,9 @@ void shell_process(PROCESS, PARAM);
 
 void init_shell();
 
+/* video_test.c */
+void init_lines_test();
+void lines_proc(PROCESS, PARAM);
+void lines_start();
+void lines_stop();
 #endif

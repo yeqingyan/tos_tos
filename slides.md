@@ -58,17 +58,19 @@ void irq_handler() {
 
 ```c
 /* TOS irq handler at 0x00000018 */
-void irq_handler() {
-    R14_irq -= 4            /* Change R14_irq to the next instruction to be executed */
-    srsdb #0x1f!            /* SRS instruction will store R14_irq and SPSR_irq into 
+.global irq_handler
+
+irq_handler:
+	sub lr, lr, #4        /* Change R14_irq to the next instruction to be executed */
+    srsdb #0x1f!          /* SRS instruction will store R14_irq and SPSR_irq into 
                                 R13_sys(Stack Pointer in SYS Mode) */
-    CPSR [4:0] = 0b1111     /* Change to system mode */
-    push {r0-r3, lr}        /* store caller-save general purpose register, r0-r3 and lr */        
-    isr_dispatcher();       /* Process IRQs */
-    pop {r0-r3, lr}         /* Pop r0-r3, lr back */
-    rfeia sp!               /* RFE instruction will load R14, SPSR on R13_sys stack into 
+	cpsid i, #0x1f        /* Change to system mode */
+   	push {r0-r3, lr}      /* store caller-save general purpose register, r0-r3 and lr */        
+	bl isr_dispatcher	  /* Process IRQs */
+    pop {r0-r3, lr}      /* Pop r0-r3, lr back */
+    rfeia sp!            /* RFE instruction will load R14, SPSR on R13_sys stack into 
                                 PC and CPSR register, resume interrupted program */
-}
+
 ```
 
 
@@ -91,30 +93,52 @@ void isr_dispatcher(void) {
 ```
 
 ```c
-/* Initialize Interrupts table */
-void init_interrupts(void){
-        DISABLE_INTR();
-        int i;
-        
-        for(i=0; i < INTERRUPTS_NUMBER; i++) {
-            interrupts_table[i] = NULL;         
-        }
-        
-        init_timer();
-        ENABLE_INTR();
+/* Initialize Interrupts */
+void init_interrupts(void) {
+    int i;
+
+    for (i = 0; i < INTERRUPTS_NUMBER; i++) {
+        interrupts_table[i] = NULL;
+    }
+    init_timer();
+
+    // Enable IRQ bit in CPSR
+    asm("mrs r0, cpsr");
+    asm("bic r0, r0, #0x80");	
+    asm("msr cpsr_c, r0");
 }
+
 ```
 
 ```c
-/* Init timer */
-void init_timer(void){
-        /* Setup tiemr interrupt service routine(ISR) */
-        interrupts_table[INTR_ARM_TIMER] = isr_timer;
-                
-        // Enable receive timer interrupt IRQ 
-        enable_irq(INTR_ARM_TIMER);
+#define INTR_ARM_TIMER      0
+#define ARM_TIMER_BASE      0x2000B400
+#define ENABLE_BASIC_IRQS   0x2000B218
+#define INTR_TIMER_CTRL_23BIT           (1 << 1) // Use 23-bit counter(it should be 32-bit)
+#define INTR_TIMER_CTRL_ENABLE          (1 << 7) // Timer Enabled
+#define INTR_TIMER_CTRL_INT_ENABLE      (1 << 5) // Enable Timer interrupt
+#define INTR_TIMER_CTRL_PRESCALE_1      (0 << 2) // Pre-scal is clock/1 (No pre-scale)
 
-        // Initalize Timer.... 
+/* Init timer */
+void init_timer(void) {
+	 int * enable_basic_irqs = (int *) ENABLE_BASIC_IRQS;
+	 int * arm_timer_load = (int *)(ARM_TIMER_BASE);
+	 int * arm_timer_ctrl = (int *)(ARM_TIMER_BASE+0xC);
+	 
+    /* Setup tiemr interrupt service routine(ISR) */
+    interrupts_table[INTR_ARM_TIMER] = isr_timer;
+
+    // Enable receive timer interrupt IRQ
+    *(enable_basic_irqs) = 1 << (INTR_ARM_TIMER);
+
+    // Get Timer register address, based on BCM2835 document section 14.2
+    // Setup Timer frequency around 1kHz
+    // Get timer load to 1024
+    *(arm_timer_load) = 0x400;
+
+    // Enable Timer, send IRQ, no-prescale, use 32bit counter
+    *(arm_timer_ctrl) =     INTR_TIMER_CTRL_23BIT |INTR_TIMER_CTRL_ENABLE |
+                             INTR_TIMER_CTRL_INT_ENABLE | INTR_TIMER_CTRL_PRESCALE_1;
 }
 ```
 
@@ -223,3 +247,211 @@ int main() {
     *gpio_addr = bit_value;          // Turn Pin 4 on 
     while(1){};
 }
+```
+GPIO INPUT/OUTPUT
+
+```c
+int *gpio_addr = (int *)0x20200000;       // GPIO Base address
+const int PIN_IN=8, PIN_OUT=7, INPUT_FUNC = 0, OUTPUT_FUNC = 1;
+// SET_OFFSET = 0x1C CLR_OFFSET = 0x28 ... etc 
+const int SET_OFFSET=7, CLR_OFFSET=10, GPLEV_OFFSET=13, GPPUD_OFFSET=37, GPPUDCLK_OFFSET=38;
+
+void set_gpio_func(int pin, int function) {     // Setup function for GPIO Pins. 
+    function = function << (pin % 10 * 3);      // Function 0 for input, 1 for output 
+    int mask = ~(7 << (pin % 10 * 3));          // Each pin using 3 bits.
+    (*gpio_addr) = ((*gpio_addr) & mask ) ^ function;
+}
+
+void wait_150_cycles() {
+    int i;
+    for (i=0; i<150; i++) { asm volatile("nop"); }}
+        
+int main() {  
+    // Step 1. Set default input pin 8 to high. 
+    // GPIO Pull-up/down register: Set bit 1-0 to 10 to enable default input to HIGH  
+    *(gpio_addr + GPPUD_OFFSET) = (*(gpio_addr + GPPUD_OFFSET) & ~3) | 2;
+    wait_150_cycles();      // According BCM2835 manual, wait 150 cycles before next step.
+    // GPIO Pull-up/down clock register: Write the previous contorl value to Pin 8 
+    *(gpio_addr + GPPUDCLK_OFFSET) = 1 << PIN_IN;  
+    wait_150_cycles();
+    // Cleanup two registers  
+    *(gpio_addr + GPPUD_OFFSET) &= ~3;
+    *(gpio_addr + GPPUDCLK_OFFSET) = 0;
+     
+    // Sep 2. Enable input for pin 8, output for pin 7
+    set_gpio_func(PIN_IN, INPUT_FUNC);    // Pin 8 for input, set bit 26-24 to 000 
+    set_gpio_func(PIN_OUT, OUTPUT_FUNC);  // Pin 7 for output, set bit 23-21 to 001
+    
+    // Step 3. Using switch to turn on/off led. 
+    while (1) {
+        if ((*(gpio_addr + GPLEV_OFFSET) & (1 << PIN_IN)) == 0) { // Check Pin 8's level
+            *(gpio_addr + SET_OFFSET) = (1 << PIN_OUT); // If Pin 8 is high, turn Pin 7 on to light on LED
+        } else {
+            *(gpio_addr + CLR_OFFSET) = (1 << PIN_OUT); // If Pin 8 is low, turn Pin 7 off to light off LED
+        }
+    }
+}
+
+```
+
+Reset handler
+
+```c
+CPSR [4:0] = 0b10011 	// Enter supervisor mode 
+CPSR [6] = 1 				// Disable FIQs
+CPSR [7] = 1				// Disable IRQs
+
+// Jump to 0x0, which store the assembly instrction to call reset_handler.
+b 0x0						
+
+```
+
+```c
+// Using ldr instead of b(Branch) since branch can only jump to +/-32MB of current address.
+Address
+0x0:             ldr pc, reset_addr	 
+
+Reset_addr:      reset_handler		// Store the function address
+Reset_handler:   b kernel_main();		// Jump to main function
+
+```
+
+Reset handler
+
+```
+_start:        
+_vectors:
+        ldr pc, reset_addr              // 0x0
+        ldr pc, undef_addr              // 0x4
+        ldr pc, swi_addr                // 0x8
+        ldr pc, prefetch_addr           // 0xC
+        ldr pc, abort_addr              // 0x10
+        ldr pc, reserved_addr           // 0x14
+        ldr pc, irq_addr                // 0x18
+        ldr pc, fiq_addr                // 0x1C
+        
+reset_addr:     .word reset_handler
+undef_addr:     .word undef_handler
+swi_addr:       .word swi_handler
+prefetch_addr:  .word prefetch_handler
+abort_addr:     .word abort_handler
+reserved_addr:  .word reset_handler
+irq_addr:       .word irq_handler
+fiq_addr:       .word fiq_handler
+_endvectors:
+
+.section .text
+reset_handler:          
+        ldr r0, =_vectors
+        mov r1, #0x0000
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        ldmia r0!, {r2-r9}
+        stmia r1!, {r2-r9}
+        
+        cpsid i, #0x1F          // Change back to SYS mode(0x1F)        
+        mov sp, #0xA00000       // Setup Stack pointer for SYS mode 
+        
+        b kernel_main
+```
+
+improved c 
+
+```c
+int *gpio_addr = (int *)0x20200000;       // GPIO Base address
+const int PIN_IN=8, PIN_OUT=7, INPUT_FUNC = 0, OUTPUT_FUNC = 1;
+// SET_OFFSET = 0x1C CLR_OFFSET = 0x28 ... etc 
+const int SET_OFFSET=7, CLR_OFFSET=10, GPLEV_OFFSET=13, GPPUD_OFFSET=37, GPPUDCLK_OFFSET=38;
+
+void wait_150_cycles() {
+    int i;
+    for (i=0; i<150; i++) { asm volatile("nop"); }}
+
+typedef struct {
+    unsigned volatile int pud     : 2;
+    unsigned volatile int unused  : 30;    
+} GPPUD_REG;
+
+typedef struct {
+    unsigned volatile int pin0_pin7  : 8;
+    unsigned volatile int pin8       : 1;
+    unsigned volatile int pin9_pin31 : 23; 
+} GPPUDCLK_REG;
+
+typedef struct {
+    unsigned volatile int pin0_pin6 : 21;
+    unsigned volatile int pin7      : 3;
+    unsigned volatile int pin8      : 3;
+    unsigned volatile int pin9      : 5;
+} GPFSEL_REG;
+
+typedef struct {
+    unsigned volatile int pin0_pin7  : 8;
+    unsigned volatile int pin8       : 1;
+    unsigned volatile int pin9_pin31 : 23;
+} GPLEV_REG;
+
+typedef struct {
+    unsigned volatile int pin0_pin6  : 7;
+    unsigned volatile int pin7       : 1;
+    unsigned volatile int pin8_pin31 : 24;
+} GPSET_GPCLR_REG;
+    
+int kernel_main() {  
+    // Step 1. Set default input pin 8 to high. 
+    // GPIO Pull-up/down register: Set bit 1-0 to 10 to enable default input to HIGH
+    ((GPPUD_REG *)(gpio_addr + GPPUD_OFFSET))->pud = 2;    
+    wait_150_cycles();      // According BCM2835 manual, wait 150 cycles before next step.
+    // GPIO Pull-up/down clock register: Write the previous contorl value to Pin 8
+    ((GPPUDCLK_REG *)(gpio_addr + GPPUDCLK_OFFSET))->pin8 = 1; 
+    wait_150_cycles();
+    // Cleanup two registers  
+    ((GPPUD_REG *)(gpio_addr + GPPUD_OFFSET))->pud = 0;
+    ((GPPUDCLK_REG *)(gpio_addr + GPPUDCLK_OFFSET))->pin8 = 0;
+     
+    // Step 2. Enable input for pin 8, output for pin 7
+    ((GPFSEL_REG *)gpio_addr)->pin7 = 1;
+    ((GPFSEL_REG *)gpio_addr)->pin8 = 0;
+    
+    // Step 3. Using switch to turn on/off led. 
+    while (1) {
+        if (((GPLEV_REG *)(gpio_addr + GPLEV_OFFSET))->pin8 == 0) { // Check Pin 8's level
+            ((GPSET_GPCLR_REG *)(gpio_addr + SET_OFFSET))->pin7 = 1 ; // If Pin 8 is high, turn Pin 7 on to light on LED
+        } else {
+            ((GPSET_GPCLR_REG *)(gpio_addr + CLR_OFFSET))->pin7 = 1 ;// If Pin 8 is low, turn Pin 7 off to light off LED
+        }
+    }
+}
+```
+
+Draw pixel
+
+```c
+typedef struct {
+    int p_width;     // Physical Width
+    int p_height;    // Physical Height
+    int v_width;     // Virutal Width(Framebuffer width)
+    int v_height;	 // Virtual Height(Framebuffer height)
+    int gpu_pitch;   // GPU - Pitch
+    int bit_depth;   // Bit Depth (High Colour)
+    int x; // number of pixels to skip in the top left corner of the screen when copying the framebuffer to screen
+    int y;
+    int gpu_pointer; // Point to the frame buffer
+    int gpu_size;    // GPU - Size
+} FrameBufferInfo;
+FrameBufferInfo *graphicsAddress;		// FranebufferInfo was initilized when tos boot.
+
+short foreground_color = 0xFFFF; // Foreground white color
+// Draw a pixel at row y, column x. This function only work for high color(16-bit)
+void draw_pixel(int x, int y) {
+    int width;
+    short *gpu_pointer;		// Each pixel use 2 bytes.
+
+    width = (graphicsAddress->p_width);       /* Get Width */
+
+    /* Compute the address of the pixel to write */
+    gpu_pointer = (short *) graphicsAddress->gpu_pointer;
+    *(gpu_pointer + (x + y * width)) = foreground_color;  /* Calculate pixel position in memory */
+	return;    
+}
+```

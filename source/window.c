@@ -1,8 +1,5 @@
 #include <kernel.h>
 
-#define SCREEN_WIDTH     80
-#define SCREEN_HEIGHT    25
-
 /*
  * Write a character into framebuffer
 */

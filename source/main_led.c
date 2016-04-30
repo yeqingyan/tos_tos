@@ -12,8 +12,8 @@ void set_gpio_func(int pin, int function) {     // Setup function for GPIO Pins.
 void wait_150_cycles() {
     int i;
     for (i=0; i<150; i++) { asm volatile("nop"); }}
-        
-int main() {  
+    
+int kernel_main() {  
     // Step 1. Set default input pin 8 to high. 
     // GPIO Pull-up/down register: Set bit 1-0 to 10 to enable default input to HIGH  
     *(gpio_addr + GPPUD_OFFSET) = (*(gpio_addr + GPPUD_OFFSET) & ~3) | 2;

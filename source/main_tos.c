@@ -80,7 +80,6 @@ int kernel_main() {
 
     init_keyb();
     init_shell();
-    init_lines_test();
     init_interrupts();
     kprintf("Init interrupt Done\n");
     //init_pacman(kernel_window, 2);

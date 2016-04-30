@@ -190,9 +190,14 @@ void copy_pixel_16bit(int src_x, int src_y, int des_x, int des_y) {
  * x1: destination x coordinate
  * y1: destination y coordinate
  */
-void draw_line(int x0, int y0, int x1, int y1) {
-    int deltax, deltay, stepy, stepx, error, error2;
+void draw_line(int x0, int y0, int x1, int y1, unsigned short color) {
+    volatile unsigned int cpsr_flag;
+    SAVE_CPSR_DIS_IRQ(cpsr_flag);
+    
+    int deltax, deltay, stepy, stepx, error, error2, fore_color;
 
+    fore_color = get_fore_colour();
+    set_fore_colour(color);
     if (x1 > x0) {
         deltax = x1 - x0;
         stepx = 1;
@@ -229,6 +234,8 @@ void draw_line(int x0, int y0, int x1, int y1) {
             y0 += stepy;
         }
     }
+    set_fore_colour(fore_color);
+    RESUME_CPSR(cpsr_flag);
 }
 
 /*

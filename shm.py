@@ -1,5 +1,4 @@
 import sysv_ipc
-import struct
 
 key = 6666
 size = 160
