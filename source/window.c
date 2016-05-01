@@ -143,7 +143,8 @@ static WINDOW kernel_window_def = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, ' '}
 WINDOW *kernel_window = &kernel_window_def;
 
 void kprintf(const char *fmt, ...) {
-    //SAVE_CPSR_DIS_IRQ(cpsr_flag);
+    volatile int cpsr_flag;
+    SAVE_CPSR_DIS_IRQ(cpsr_flag);
     va_list argp;
     char buf[160];
 
@@ -151,11 +152,12 @@ void kprintf(const char *fmt, ...) {
     vs_printf(buf, fmt, argp);
     output_string(kernel_window, buf);
     va_end(argp);
-    //RESUME_CPSR(cpsr_flag);
+    RESUME_CPSR(cpsr_flag);
 }
 
 void wprintf(WINDOW *wnd, const char *fmt, ...) {
-    //SAVE_CPSR_DIS_IRQ(cpsr_flag);
+    volatile int cpsr_flag;
+    SAVE_CPSR_DIS_IRQ(cpsr_flag);
     va_list argp;
     char buf[160];
 
@@ -163,5 +165,5 @@ void wprintf(WINDOW *wnd, const char *fmt, ...) {
     vs_printf(buf, fmt, argp);
     output_string(wnd, buf);
     va_end(argp);
-    //RESUME_CPSR(cpsr_flag);
+    RESUME_CPSR(cpsr_flag);
 }

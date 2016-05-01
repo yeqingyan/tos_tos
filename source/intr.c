@@ -44,7 +44,7 @@ void clear_irq(int intr_no) {
     TODO: This part of code better written in Assembly. To make sure no register is used by error.
       
 */
-void isr_dispatcher(void) {
+void irq_handler(void) {
     // Interrupt alreay disabled in irq_handler
     temp_enabled_basic_irqs = enabled_basic_irqs;
 
@@ -65,21 +65,34 @@ void isr_dispatcher(void) {
 
 /* timer isr */
 void isr_timer(void) {
-    asm volatile("nop");
-    asm volatile("nop");
-    asm volatile("nop");
+    //asm volatile("nop");
+    //asm volatile("nop");
+    //asm volatile("nop");
     // Acknowledged we handled the irq
     GetARMTimer()->IRQ_Clear = 1;
-    resign();
+    //resign();
+}
+
+void master_isr(void) {
+    asm("sub lr, lr, #4");
+    asm("srsdb #0x1f!");    // store lr and SPSR to stack
+    asm("cpsid i, #0x1f");
+    asm("push {r0-r12, r14}");
+    asm("mov %[old_sp], %%sp" : [old_sp] "=r"(active_proc->sp) :);
+    asm("bl irq_handler");
+    asm("bl dispatcher_impl");
+    asm("mov %%sp, %[new_sp]" : : [new_sp] "r"(active_proc->sp));
+    asm("pop {r0-r12, r14}");
+    asm("rfeia sp!");
 }
 
 /* Init timer */
 void init_timer(void) {
-    /* Setup tiemr interrupt service routine(ISR) */
-    interrupts_table[INTR_ARM_TIMER] = isr_timer;
+    /* Setup timer interrupt service routine(ISR) */
+    interrupts_table[TIMER_IRQ] = isr_timer;
 
     // Enable receive timer interrupt IRQ
-    enable_irq(INTR_ARM_TIMER);
+    enable_irq(TIMER_IRQ);
 
     // Get Timer register address, based on BCM2835 document section 14.2
     // Setup Timer frequency around 1kHz

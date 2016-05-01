@@ -17,7 +17,7 @@ PCB pcb[MAX_PROCS];
  *  Parameters:
  *  ptr_to_new_proc:    function pointer point to a new process
  *  prio:               priority number
- *  param:              paramters for the new process
+ *  param:              parameters for the new process
  *  name:               process name
  *
  *  Return:
@@ -48,36 +48,29 @@ PORT create_process(void (*ptr_to_new_proc)(PROCESS, PARAM), int prio, PARAM par
     /* save actual PARAM (second param of func ptr_to_new_proc) */
     sp -= 4;
     poke_l(sp, param);
+    
     /* save create process self (first param of func ptr_to_new_proc)*/
     sp -= 4;
     poke_l(sp, (LONG) & pcb[i]);
 
-
-    /* push CS */
-    // TODO: Need check for rapsberry pi CS
-    //sp -= 4;
-    //poke_l(sp, (LONG)8);
-
-    /* dummy return address here */
     sp -= 4;
-    poke_l(sp, (LONG) 0);
+    /* Push CPSR here, set mode to SYS mode, enable irq,
+     * since enalbe irq is clear the 7th bit of cpsr will enable IRQ */
+    poke_l(sp, 0x15f);
 
     /* new process address */
     sp -= 4;
     poke_l(sp, (LONG) ptr_to_new_proc);
 
+    /* dummy return address here */
+    sp -= 4;
+    poke_l(sp, (LONG) 0);
+    
     /* initialize r0 to r12 */
     for (j = 0; j <= 12; j++) {
         sp -= 4;
         poke_l(sp, 0);
-    }
-
-    sp -= 4;
-
-    /* Push CPSR here, set mode to SYS mode, enable irq,
-     * since enalbe irq is clear the 7th bit of cpsr will enable IRQ */
-    poke_l(sp, 0x1f);
-
+    }    
     pcb[i].sp = sp;
     pcb[i].param_proc = &pcb[i];
     pcb[i].param_data = (void *) param;

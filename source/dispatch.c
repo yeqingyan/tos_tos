@@ -6,10 +6,10 @@ PROCESS active_proc;
 /* Ready queues for all eight priorities */
 PCB *ready_queue[MAX_READY_QUEUES];
 /*
- * The bits in ready_procs tell which ready queue is empty.
- * The MSB of ready_procs corresponds to ready_queue[7].
+ * The bits in ready_procs() tell which ready queue is empty.
+ * The MSB of ready_procs() corresponds to ready_queue[7].
  */
-//unsigned ready_procs;
+// unsigned ready_procs;
 
 /*
  * add_ready_queue()
@@ -109,14 +109,18 @@ PROCESS dispatcher() {
  *  The stack of the calling process is setup such that is
  *  looks like on interrupt.
  *  
- * Use resign_impl() helper function, so all code in resign are assembly 
+ * Use dispatcher_impl() helper function, so all code in resign are assembly 
  * and GCC compile won't add push/pop around the function.    
  */
-void resign_impl() {
+void dispatcher_impl() {
     active_proc = dispatcher();
 }
 
 void resign() {
+    /* Save CPSR register */
+    asm("mrs r12, cpsr");
+    asm("push {r12}");
+    asm("push {lr}");
     /* Save the content of the current process
      *
      * Note: Push a list of register in stack, the lowest-numbered register to 
@@ -124,15 +128,13 @@ void resign() {
      * the highest memory address. The SP(r13) and PC(r15) register cannot be 
      * in the list. (From ARMv6 manual.)
      */
+     /* Note R14 will never used. */
     asm("push {r0-r12, r14}");
 
-    /* Save CPSR register */
-    asm("mrs r12, cpsr");
-    asm("push {r12}");
 
     /* Set active process */
     asm("mov %[old_sp], %%sp" : [old_sp] "=r"(active_proc->sp) :);
-    asm("bl resign_impl");
+    asm("bl dispatcher_impl");
     asm("mov %%sp, %[new_sp]" : : [new_sp] "r"(active_proc->sp));
 
     /*
@@ -148,10 +150,12 @@ void resign() {
      * will not be used in here. It is safe we pop the garbage value into 
      * LR here.
      */
-    asm("pop {r12}");
-    asm("msr cpsr_c, r12");
+    //asm("pop {r12}");
+    //asm("msr cpsr_c, r12");
 
-    asm("pop {r0-r12, pc}");
+    asm("pop {r0-r12, r14}");
+    asm("rfeia sp!");
+    
 }
 
 /*

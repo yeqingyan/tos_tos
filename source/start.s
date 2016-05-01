@@ -31,7 +31,7 @@ swi_addr:       .word swi_handler
 prefetch_addr:  .word prefetch_handler
 abort_addr:     .word abort_handler
 reserved_addr:  .word reset_handler
-irq_addr:       .word irq_handler
+irq_addr:       .word master_isr
 fiq_addr:       .word fiq_handler
 _endvectors:
 

@@ -160,7 +160,6 @@ void init_pacman(WINDOW *wnd, int num_ghosts) {
     pacman_wnd->cursor_char = GHOST_CHAR;
 
     draw_maze();
-    
     int i;
     
     for (i = 0; i < num_ghosts; i++) {

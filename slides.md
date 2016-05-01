@@ -57,19 +57,31 @@ void irq_handler() {
 ```
 
 ```c
-/* TOS irq handler at 0x00000018 */
-.global irq_handler
+void master_isr(void) {
+	// When CPU into IRQ mode, the Link Register(R14) will have value PC+4, where PC is the address 
+	// of the instruction that was NOT executed because the IRQ took priority. In order to return to 
+	// the right address(PC), we need to minus R14 by 4 
+    asm("sub lr, lr, #4");
 
-irq_handler:
-	sub lr, lr, #4        /* Change R14_irq to the next instruction to be executed */
-    srsdb #0x1f!          /* SRS instruction will store R14_irq and SPSR_irq into 
-                                R13_sys(Stack Pointer in SYS Mode) */
-	cpsid i, #0x1f        /* Change to system mode */
-   	push {r0-r3, lr}      /* store caller-save general purpose register, r0-r3 and lr */        
-	bl isr_dispatcher	  /* Process IRQs */
-    pop {r0-r3, lr}      /* Pop r0-r3, lr back */
-    rfeia sp!            /* RFE instruction will load R14, SPSR on R13_sys stack into 
-                                PC and CPSR register, resume interrupted program */
+	// SRS (Store Return State) stores the LR and SPSR of the current mode(IRQ) to the stack in SYS mode 
+	// 5 bits(0x1f) indicate the SYS mode. "db"(Decrement Before) suffix means cpu will decrement the stack 
+	// pointer before store values into stack. "!" means after store R14 and SPSR of the IRQ mode into SYS 
+	// mode stack, update the stack pointer in SYS mode.    
+    asm("srsdb #0x1f!");   
+    asm("cpsid i, #0x1f");			// Change CPSR to SYS mode, "i" means disable IRQ. "0x1f" means SYSTEM mode.    
+    asm("push {r0-r12, r14}");	// Save registers
+    asm("mov %[old_sp], %%sp" : [old_sp] "=r"(active_proc->sp) :);   // Save Stack pointer
+    asm("bl irq_handler");			// handler IRQs
+    asm("bl dispatcher_impl");	// Call dispatcher()
+    asm("mov %%sp, %[new_sp]" : : [new_sp] "r"(active_proc->sp));    // Get new process stack pointer
+
+    asm("pop {r0-r12, r14}");		// Restore registers
+    // RFE(Return From Exception) load LR, SPSR on SYS stack into PC and CPSR register, "ia" (increase after)   
+	 // means increment stack pointer after read from stack. "!" means update value in sp after instruction. 
+    asm("rfeia sp!");
+}
+
+
 
 ```
 
@@ -453,5 +465,20 @@ void draw_pixel(int x, int y) {
     gpu_pointer = (short *) graphicsAddress->gpu_pointer;
     *(gpu_pointer + (x + y * width)) = foreground_color;  /* Calculate pixel position in memory */
 	return;    
+}
+```
+
+```c
+void master_isr(void) {
+    asm("sub lr, lr, #4");
+    asm("srsdb #0x1f!");        // store lr and SPSR to stack
+    asm("cpsid i, #0x1f");      // Switch to SYS mode
+    asm("push {r0-r12, r14}");  // Save registers
+    asm("mov %[old_sp], %%sp" : [old_sp] "=r"(active_proc->sp) :);
+    asm("bl irq_handler");      // handler IRQs
+    asm("bl dispatcher_impl");  // Find next available process
+    asm("mov %%sp, %[new_sp]" : : [new_sp] "r"(active_proc->sp));
+    asm("pop {r0-r12, r14}");   // Restore registers
+    asm("rfeia sp!");           // Return from IRQ
 }
 ```

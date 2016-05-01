@@ -22,7 +22,7 @@ typedef volatile struct {
 #define INTR_TIMER_CTRL_PRESCALE_1      (0 << 2) // Pre-scal is clock/1 (No pre-scale)
 
 /* Based on BCM2835 Document Section 7.5 ARM peripherals interrupts table */
-#define INTR_ARM_TIMER                  0
+#define TIMER_IRQ                  0
 
 void init_interrupts(void);
 

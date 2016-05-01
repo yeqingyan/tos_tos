@@ -169,7 +169,7 @@ void add_ready_queue(PROCESS proc);
 void remove_ready_queue(PROCESS proc);
 
 PROCESS dispatcher();
-
+void dispatcher_impl();
 void resign();
 
 
@@ -338,6 +338,7 @@ void init_ipc();
 void init_interrupts(void);
 
 void irq_handler(void);
+void master_isr(void);
 
 // Restore previous saved flag
 // Note: If the previous flag already disable IRQ, the IRQ won't enabled.
