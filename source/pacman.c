@@ -140,7 +140,6 @@ void create_new_ghost()
     choose_random_direction(&dx, &dy);
     
     while (1) {
-    	Wait(10000);
 	    while (move_ghost(&ghost, dx, dy) == FALSE) {
 	        choose_random_direction(&dx, &dy);
         }

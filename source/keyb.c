@@ -111,16 +111,20 @@ void keyb_process(PROCESS self, PARAM param) {
  * Notify keyboard_process, the keyboard was pressed.
  */
 void keyb_notifier(PROCESS self, PARAM param) {
+    volatile unsigned int cpsr_flag;
     Keyb_Message msg;
 
     while (1) {
+        SAVE_CPSR_DIS_IRQ(cpsr_flag); 
         keyboard_update();
         new_key = keyboard_get_char();
+        RESUME_CPSR(cpsr_flag);
         if (new_key != 0) {
             msg.key_buffer = (BYTE * ) & new_key;
             //kprintf("Got new key %x\n", new_key);
             message(keyb_port, &msg);
         }
+        
     }
 }
 
@@ -147,7 +151,6 @@ void keyboard_update() {
     do {
         if (keyboard_address == 0) {
             UsbCheckForChange();
-
             keyboard_count = KeyboardCount();
             kprintf("Got %d keyboard\n", keyboard_count);
             if (keyboard_count == 0) {

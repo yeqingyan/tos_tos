@@ -368,4 +368,9 @@ void init_lines_test();
 void lines_proc(PROCESS, PARAM);
 void lines_start();
 void lines_stop();
+
+/* led.c */
+void led_proc(PROCESS , PARAM );
+void init_led();
+void wait_150_cycles();
 #endif

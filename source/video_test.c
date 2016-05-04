@@ -18,6 +18,7 @@ void lines_stop() {
 void lines_start() {
     add_ready_queue(lines_proc_ptr);
 }
+
 void lines_proc(PROCESS self, PARAM param)
 {
     unsigned short line_color = 0;

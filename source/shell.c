@@ -84,6 +84,7 @@ void run_command(char *cmd) {
 //        wprintf(wnd_ptr, "train  - Train related\n");
 //        wprintf(wnd_ptr, "switch - Change switch position\n");
         wprintf(wnd_ptr, "pacman - Start Pacman game\n");
+        wprintf(wnd_ptr, "start_led - Start LED Program\n");
 //        wprintf(wnd_ptr, "inc_sleep/dec_sleep - Increase/Decrease sleep time with 10 ticks\n");
 //        wprintf(wnd_ptr, "inc_check/dec_check - Increase/Decrease check time with 10 ticks\n");
     } else if (str_cmp(cmd, "ps") == 0) {
@@ -99,6 +100,8 @@ void run_command(char *cmd) {
         lines_start(); 
     } else if (str_cmp(cmd, "stop_lines") == 0) {
         lines_stop();
+    } else if (str_cmp(cmd, "start_led") == 0) {
+        init_led(); 
 //    } else if (str_cmp(cmd, "train") == 0) {
 //        init_train(wnd_ptr);
 //    } else if (str_cmp(cmd, "inc_sleep") == 0) {
