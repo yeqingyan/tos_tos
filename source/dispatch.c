@@ -3,39 +3,30 @@
 #define HIGHEST_PRIORITY 7
 PROCESS active_proc;
 
-/* Ready queues for all eight priorities */
+// Ready queues for all eight priorities
 PCB *ready_queue[MAX_READY_QUEUES];
-/*
- * The bits in ready_procs() tell which ready queue is empty.
- * The MSB of ready_procs() corresponds to ready_queue[7].
- */
-// unsigned ready_procs;
 
-/*
- * add_ready_queue()
- * -----------------
- *  The process pointed to by p is put the ready queue.
- *  The appropriate ready queue is determined by p->priority.
- *
- *  Parameters:
- *  proc: process need to be added to the queue
+/**
+ * The process pointed to by p is put the ready queue.
+ * The appropriate ready queue is determined by p->priority.
+ * 
+ * @param proc  process need to be added to the queue
  */
 void add_ready_queue(PROCESS proc) {
     int prio;
     volatile unsigned int cpsr_flag;
-    
+
     SAVE_CPSR_DIS_IRQ(cpsr_flag);
-    assert (proc->magic == MAGIC_PCB);
+    assert(proc->magic == MAGIC_PCB);
+//    kprintf("[%s] added back from ready queue!\n", proc->name);
     prio = proc->priority;
-    //kprintf("Add [%s] to ready queue\n", proc->name);
     if (ready_queue[prio] == NULL) {
-        /* The only process on this priority level */
+        // Only one process on this priority level 
         ready_queue[prio] = proc;
         proc->next = proc;
         proc->prev = proc;
-        //ready_procs |= 1 << prio;
     } else {
-        /* Some other processes on this priority level */
+        // Some other processes on this priority level 
         proc->next = ready_queue[prio];
         proc->prev = ready_queue[prio]->prev;
         ready_queue[prio]->prev->next = proc;
@@ -45,28 +36,22 @@ void add_ready_queue(PROCESS proc) {
     RESUME_CPSR(cpsr_flag);
 }
 
-/*
- * remove_ready_queue()
- * --------------------
- *  The process pointed to by p is dequeued from the ready queue.
- *
- *  Parameters:
- *  proc: process need to remove from ready queue
+/**
+ * The process pointed to by p is dequeued from the ready queue.
+ * 
+ * @param proc  process need to remove from ready queue
  */
 void remove_ready_queue(PROCESS proc) {
     int prio;
     volatile unsigned int cpsr_flag;
-    
+
     SAVE_CPSR_DIS_IRQ(cpsr_flag);
-    assert (proc->magic == MAGIC_PCB);
+    assert(proc->magic == MAGIC_PCB);
     prio = proc->priority;
-    //kprintf("Remove [%s] from ready queue, %d\n", proc->name, proc->state);
+    //kprintf("[%s] remove [%s] from ready queue, %d\n", active_proc->name, proc->name, proc->state);
     if (proc->next == proc) {
         //kprintf("[%s] In priority %d, No process is available\n", proc->name, proc->priority);
-        //print_all_processes(kernel_window);
-
         ready_queue[prio] = NULL;
-        //ready_procs &= ~(1 << prio);
     } else {
         ready_queue[prio] = proc->next;
         proc->next->prev = proc->prev;
@@ -76,12 +61,11 @@ void remove_ready_queue(PROCESS proc) {
     RESUME_CPSR(cpsr_flag);
 }
 
-/*
- * dispatcher()
- * ----------
- *  Determines a new process to dispatched. The process
- *  with the highest priority is taken. Within one priority
- *  level round robin is used
+/**
+ * Determines a new process to dispatched. The process with the highest 
+ * priority is taken. Within one priority level round robin is used.
+ * 
+ * @return ptr to a new process's pcb.
  */
 PROCESS dispatcher() {
     int i;
@@ -92,78 +76,77 @@ PROCESS dispatcher() {
             if ((i == cur_pri) && (ready_queue[i] == active_proc)) {
                 ready_queue[i] = ready_queue[i]->next;
             }
+            assert(ready_queue[i]->magic == MAGIC_PCB);
+            //kprintf("Got process %s\n", ready_queue[i]->name);
+//            ps();
             return ready_queue[i];
         }
     }
-
     // should not run into this line
     assert(0);
     return NULL;
 }
 
-/*
- * resign()
- * --------
- *  The current process gives up the CPU voluntarily. The
- *  next running process is determined via dispatcher().
- *  The stack of the calling process is setup such that is
- *  looks like on interrupt.
- *  
- * Use dispatcher_impl() helper function, so all code in resign are assembly 
- * and GCC compile won't add push/pop around the function.    
+/**
+ * Call by master_isr() and resign(). this is a help function, so we do not 
+ * need to worried about return value in assembly. Since so all code in resign()
+ * and master_isr() are assembly, GCC compile won't add push/pop around the 
+ * function.    
  */
 void dispatcher_impl() {
     active_proc = dispatcher();
 }
 
+/**
+ * The current process gives up the CPU voluntarily. The next running process 
+ * is determined via dispatcher(). The stack of the calling process is setup 
+ * such that is looks like on interrupt.
+ */
 void resign() {
-    /* Save CPSR register */
+    // Save CPSR register and link register 
+    // SRS (Store Return State) stores the LR and SPSR of the current mode to 
+    // the stack in SYS mode. (0x1f) indicate the SYS mode. "db" (Decrement 
+    // Before) suffix means CPU will decrement the stack pointer before storing 
+    // values onto stack. "!" means after store R14 and SPSR of the IRQ mode 
+    // into SYS mode stack, update the stack pointer in SYS mode. (Ref. ARM 
+    // Manual B9.3.16)
+    // This instruction is equal to:
+   // TODO they are different !!!!
     asm("mrs r12, cpsr");
     asm("push {r12}");
     asm("push {lr}");
-    /* Save the content of the current process
-     *
-     * Note: Push a list of register in stack, the lowest-numbered register to 
-     * the lowest memory address through to the highest-numbered register to 
-     * the highest memory address. The SP(r13) and PC(r15) register cannot be 
-     * in the list. (From ARMv6 manual.)
-     */
-     /* Note R14 will never used. */
+    //asm("srsdb #0x1f!"); // store lr and SPSR to stack
+    
+    // Save the content of the current process
+    //    
+    // Note: Push a list of register in stack, the lowest-numbered register to 
+    // the lowest memory address through to the highest-numbered register to 
+    // the highest memory address. The SP(r13) and PC(r15) register cannot be 
+    // in the list. (Ref. ARM Manual A8.8.133)
     asm("push {r0-r12, r14}");
 
-
-    /* Set active process */
+    // Set active process
     asm("mov %[old_sp], %%sp" : [old_sp] "=r"(active_proc->sp) :);
+    
+    // data memory barrier. see dmb implmentation in intr.c
+    asm("bl dmb");      
     asm("bl dispatcher_impl");
+    asm("bl dmb");      
     asm("mov %%sp, %[new_sp]" : : [new_sp] "r"(active_proc->sp));
 
-    /*
-     * Restore CPSR. Using CPSR_C to only change the CPSR control field.
-     * if the starting process is a new process, CPSR is set to SYS mode and 
-     * enable interrupt at create_process. If the starting process is not a new
-     * process, we just use the CPSR we stored before.
-     *
-     * TODO: For new process, we do not have a return/exit address, in the 
-     * future, when we have the return/exit function, we setup the return 
-     * address in create_process() and pop it to LR before pop PC register. For
-     * other process, we push a garbage value before call dispatcher, since LR 
-     * will not be used in here. It is safe we pop the garbage value into 
-     * LR here.
-     */
-    //asm("pop {r12}");
-    //asm("msr cpsr_c, r12");
-
+    // Restore the content of the process
     asm("pop {r0-r12, r14}");
-    asm("rfeia sp!");
     
+    // RFE (Return From Exception) loads LR, SPSR on SYS stack into PC and CPSR 
+    // registers, "ia" (increase after) means increment stack pointer after 
+    // read from stack. "!" means update value in sp after instruction. (Ref. 
+    // ARM Manual B9.3.13)
+    asm("rfeia sp!");
 }
 
-/*
- * init_dispatcher()
- * -----------------
- *  Initialize the necessary data structures.
+/**
+ * Initialize the necessary data structures.
  */
-
 void init_dispatcher() {
     int i;
     active_proc = &pcb[0];

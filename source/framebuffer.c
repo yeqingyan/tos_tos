@@ -1,19 +1,16 @@
 #include <kernel.h>
 
-FrameBufferInfo frameBufferInfo;
+// Ref. Raspberry Pi baremetal screen.
+// http://www.cl.cam.ac.uk/projects/raspberrypi/tutorials/os/screen01.html
 
-/*
- * init_framebuffer()
- * ---------------------
- *  Set up frame buffer.
- *
- *  Parameters:
- *  width:          Frame buffer width(less than 4096)
- *  height:         Frame buffer height(less than 4096)
- *  bit_depth:      less than 32 bits
- *
- *  Return:
- *  Pointer to frame buffer info. Return 0 if failed.
+FrameBufferInfo frameBufferInfo;
+/**
+ * Set up frame buffer.
+ * 
+ * @param width         Frame buffer width(less than 4096)
+ * @param height        Frame buffer height(less than 4096)
+ * @param bit_depth     less than 32 bits
+ * @return              Pointer to frame buffer info. Return 0 if failed.
  */
 FrameBufferInfo *init_framebuffer(int width, int height, int bit_depth) {
     if (width > 4096) goto ERROR;
@@ -35,7 +32,7 @@ FrameBufferInfo *init_framebuffer(int width, int height, int bit_depth) {
 
     int frameBufferAddr = (int) frameBuffer;
     frameBufferAddr += 0x40000000;
-    /* Write frame buffer to channel 1 */
+    // Write frame buffer to channel 1
     mailbox_write(frameBufferAddr, 1);      
     response = mailbox_read(1);
 
@@ -43,13 +40,11 @@ FrameBufferInfo *init_framebuffer(int width, int height, int bit_depth) {
         return 0;
 
     return frameBuffer;
-    ERROR:
+ERROR:
     return 0;
 }
 
-/*
- * init_video()
- * ------------
+/**
  * Setup frame buffer, background color, foreground color.
  */
 void init_video(void) {

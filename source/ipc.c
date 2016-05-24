@@ -90,6 +90,7 @@ void send(PORT dest_port, void *data) {
         dest->param_proc = active_proc;
         dest->param_data = data;
         active_proc->state = STATE_REPLY_BLOCKED;
+//        kprintf("Wakeup %s, %s REPLY BLOCKED\n", dest->name, active_proc->name);
         add_ready_queue(dest);
     } else {
         /*
@@ -99,6 +100,7 @@ void send(PORT dest_port, void *data) {
         add_to_send_blocked_list(dest_port, active_proc);
         active_proc->state = STATE_SEND_BLOCKED;
         active_proc->param_data = data;
+//        kprintf("%s Send BLOCKED\n", active_proc->name);
     }
     active_proc->param_data = data;
     remove_ready_queue(active_proc);
@@ -119,6 +121,7 @@ void message(PORT dest_port, void *data) {
         dest->param_proc = active_proc;
         dest->param_data = data;
         add_ready_queue(dest);
+//        kprintf("Wakeup %s\n", dest->name);
     } else {
         /*
          * Receiver is busy or the port is closed.
@@ -128,6 +131,7 @@ void message(PORT dest_port, void *data) {
         remove_ready_queue(active_proc);
         active_proc->state = STATE_MESSAGE_BLOCKED;
         active_proc->param_data = data;
+//        kprintf("%s Message BLOCKED\n", active_proc->name);
     }
     resign();
     RESUME_CPSR(cpsr_flag);
@@ -164,10 +168,12 @@ void *receive(PROCESS *sender) {
 
         if (deliver_proc->state == STATE_MESSAGE_BLOCKED) {
             add_ready_queue(deliver_proc);
+//            kprintf("Receive wakeup %s\n", deliver_proc->name);
             RESUME_CPSR(cpsr_flag);
             return data;
         } else if (deliver_proc->state == STATE_SEND_BLOCKED) {
             deliver_proc->state = STATE_REPLY_BLOCKED;
+//            kprintf("%s reply blocked\n", deliver_proc->name);
             RESUME_CPSR(cpsr_flag);
             return data;
         }
@@ -176,6 +182,7 @@ void *receive(PROCESS *sender) {
     /* No messages pending */
     active_proc->param_data = data;
     active_proc->state = STATE_RECEIVE_BLOCKED;
+//    kprintf("%s receive blocked\n", active_proc->name);
     remove_ready_queue(active_proc);
     resign();
     *sender = active_proc->param_proc;
@@ -190,6 +197,7 @@ void reply(PROCESS sender) {
     if (sender->state != STATE_REPLY_BLOCKED)
         panic("reply(): Not reply blocked");
     add_ready_queue(sender);
+//    kprintf("Wake up %s\n", sender->name);
     resign();
     RESUME_CPSR(cpsr_flag);
 }

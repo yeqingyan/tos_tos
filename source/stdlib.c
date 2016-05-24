@@ -1,16 +1,13 @@
 #include <kernel.h>
 
-/* 
- * charToBin()
- * -----------
- *  Convert a ASCII character into decimal value, then put it into binary array
- *  For example, 'a' = 97, binary number is 01100001, the content of binary array will be [0,1,1,0,0,0,0,1]
- *
- *  Parameters:
- *  c: input char
- *  buf: output binary array
- *  length: the binary length
- *
+/**
+ * Convert a ASCII character into decimal value, then put it into binary array
+ * For example, 'a' = 97, binary number is 01100001, the content of binary array 
+ * will be [0,1,1,0,0,0,0,1]
+ * 
+ * @param c         input char
+ * @param buf       output binary array
+ * @param length    the binary length    
  */
 void charToBin(unsigned char c, int *buf, const int length) {
     int i, j;
@@ -19,27 +16,25 @@ void charToBin(unsigned char c, int *buf, const int length) {
     }
 }
 
-/*
- * printnum()
- * ----------
- *  Translate a number into string.
- *
- *  Parameters:
- *  b:          buff store the string.
- *  u:          input number
- *  base:       indicate the base of numerical notation. 
- *  negflag:    indicate the number is negative or not
- *  length:     the string length
- *  ladjust:    indicate whether it need to pad the space
- *  padc:       pad character
- *  upcase: the hexadecimal using upcase or lowercase.
- */
-#define MAXBUF (sizeof(long int) * 8) /* MAX length of the string */
+#define MAXBUF (sizeof(long int) * 8)   // MAX length of the string 
 
+/**
+ * Translate a number into string.
+ * 
+ * @param b             buff store the string.
+ * @param u             input number
+ * @param base          indicate the base of numerical notation.        
+ * @param negflag       indicate the number is negative or not
+ * @param length        the string length
+ * @param ladjust       indicate whether it need to pad the space
+ * @param padc          pad character
+ * @param upcase        the hexadecimal using upcase or lowercase.
+ * @return 
+ */
 char *printnum(char *b, unsigned int u, int base,
-               BOOL negflag, int length, BOOL ladjust,
-               char padc, BOOL upcase) {
-    char buf[MAXBUF];       /* build number here */
+        BOOL negflag, int length, BOOL ladjust,
+        char padc, BOOL upcase) {
+    char buf[MAXBUF]; /* build number here */
     char *p = &buf[MAXBUF - 1];
     int size;
     char *digs;
@@ -78,12 +73,14 @@ char *printnum(char *b, unsigned int u, int base,
     return b;
 }
 
-/*
- * vs_printf()
- * ----------
- *  We use vs_printf() to avoid conflict with the built-in function vsprintf()
- *  This version implements therefore follwing printf features:
- *    
+
+#define isdigit(d) ((d) >= '0' && (d) <= '9')
+#define ctod(c) ((c) - '0')
+
+/**
+ * We use vs_printf() to avoid conflict with the built-in function vsprintf()
+ * This version implements therefore follwing printf features:
+ * 
  *    %d: decimal conversion
  *    %u: unsigned conversion
  *    %x: hexadecimal conversion
@@ -94,7 +91,7 @@ char *printnum(char *b, unsigned int u, int base,
  *    %-m.n:    left adjustment
  *    %0m.n:    zero-padding
  *    %*.*      width and precision taken from arguments
- *
+ * 
  *    This version does not implement %f, %e, or %g. It accepts, but 
  *    ignores, an 'l' as in %ld, %lo, %lx, and %lu, and therefore will 
  *    not work correctly on machines for which sizeof(long) != sizeof(int).
@@ -105,14 +102,10 @@ char *printnum(char *b, unsigned int u, int base,
  *
  *    %b: binary conversion
  *
- *    Parameters:
- *    buf:      buf to store string
- *    fmt:      format used by printf
- *    argp:     parameters for fmt
+ * @param buf       buf to store string
+ * @param fmt       format used by printf
+ * @param argp      parameters for fmt
  */
-#define isdigit(d) ((d) >= '0' && (d) <= '9')
-#define ctod(c) ((c) - '0')
-
 void vs_printf(char *buf, const char *fmt, va_list argp) {
     char *p;
     char *p2;
@@ -132,7 +125,7 @@ void vs_printf(char *buf, const char *fmt, va_list argp) {
         }
         fmt++;
         if (*fmt == 'l') {
-            fmt++;          /* need to use it if sizeof(int) < sizeof(long) */
+            fmt++; // need to use it if sizeof(int) < sizeof(long)
         }
 
         length = 0;
@@ -151,7 +144,7 @@ void vs_printf(char *buf, const char *fmt, va_list argp) {
         }
 
         if (isdigit(*fmt)) {
-            while (isdigit (*fmt)) {
+            while (isdigit(*fmt)) {
                 length = 10 * length + ctod(*fmt++);
             }
         } else if (*fmt == '*') {
@@ -167,7 +160,7 @@ void vs_printf(char *buf, const char *fmt, va_list argp) {
             fmt++;
             if (isdigit(*fmt)) {
                 prec = 0;
-                while (isdigit (*fmt)) {
+                while (isdigit(*fmt)) {
                     prec = 10 * prec + ctod(*fmt++);
 
                 }
@@ -268,4 +261,40 @@ void vs_printf(char *buf, const char *fmt, va_list argp) {
         fmt++;
     }
     *buf = '\0';
+}
+
+/**
+ * Get string length
+ * 
+ * @param str
+ * @return 
+ */
+int k_strlen(const char* str) {
+    unsigned int length = 0;
+    char* index = (char*) str;
+
+    while ('\0' != *index) {
+        length++;
+        index++;
+    }
+
+    return length;
+}
+
+/**
+ * Memory copy
+ * 
+ * @param dst
+ * @param src
+ * @param len
+ * @return 
+ */
+void* k_memcpy(void* dst, const void* src, int len) {
+    int i = 0;
+    char* dst_index = (char*) dst;
+    char* src_index = (char*) src;
+
+    for (i = 0; i < len; i++, dst_index++, src_index++)
+        *dst_index = *src_index;
+    return dst;
 }

@@ -1,3 +1,5 @@
+// TODO Need more document
+
 .section .init   
 .global _start 
 _start:    
@@ -34,27 +36,3 @@ reserved_addr:  .word reset_handler
 irq_addr:       .word master_isr
 fiq_addr:       .word fiq_handler
 _endvectors:
-
-reset_handler:
-        nop 
-        b reset_handler
-        
-undef_handler:
-        nop
-        b undef_handler   
-
-swi_handler:
-        nop
-        b swi_handler
-        
-prefetch_handler:
-        nop
-        b prefetch_handler
-        
-abort_handler:
-        nop
-        b abort_handler
-        
-fiq_handler:
-        nop
-        b fiq_handler

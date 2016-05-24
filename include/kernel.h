@@ -107,6 +107,8 @@ void output_char(WINDOW *wnd, unsigned char ch);
 void output_string(WINDOW *wnd, const char *str);
 
 void wprintf(WINDOW *wnd, const char *fmt, ...);
+void debugprintf(WINDOW *wnd, const char *fmt, ...);    // Do not disable interrupt when print
+void debug_output_string(WINDOW *wnd, const char *str); // Do not disable interrupt when print
 
 void kprintf(const char *fmt, ...);
 
@@ -116,12 +118,21 @@ void copy_character(int, int, int, int);
 #define boot_name "Boot process"
 #define MAX_PROCS 20            /* Max number of processes */
 
-#define STATE_READY             0
-#define STATE_SEND_BLOCKED      1
-#define STATE_REPLY_BLOCKED     2
-#define STATE_RECEIVE_BLOCKED   3
-#define STATE_MESSAGE_BLOCKED   4
-#define STATE_INTR_BLOCKED      5
+typedef enum {
+    STATE_READY = 0,
+    STATE_SEND_BLOCKED = 1,
+    STATE_REPLY_BLOCKED = 2,
+    STATE_RECEIVE_BLOCKED = 3,
+    STATE_MESSAGE_BLOCKED = 4,
+    STATE_INTR_BLOCKED = 5,
+} PROCESS_STATUS; 
+
+//#define STATE_READY             0
+//#define STATE_SEND_BLOCKED      1
+//#define STATE_REPLY_BLOCKED     2
+//#define STATE_RECEIVE_BLOCKED   3
+//#define STATE_MESSAGE_BLOCKED   4
+//#define STATE_INTR_BLOCKED      5
 
 #define MAGIC_PCB       0x4321dcba
 struct _PCB;
@@ -134,7 +145,7 @@ typedef struct _PCB {
     unsigned magic;
     BOOL used;
     unsigned short priority;
-    unsigned short state;
+    PROCESS_STATUS state;
     MEM_ADDR sp;
     PROCESS param_proc;
     void *param_data;
@@ -177,6 +188,10 @@ void resign();
 void charToBin(unsigned char, int *, const int);
 
 void vs_printf(char *, const char *, va_list);
+
+int k_strlen(const char*);
+
+void* k_memcpy(void* , const void* , int);
 
 /* framebuffer.c */
 typedef struct {
@@ -262,10 +277,13 @@ int random();
 typedef struct _Keyb_Message {
     BYTE *key_buffer;
 } Keyb_Message;
-
+extern void CSUD_TEST();
+int SendKeyboardPollingMessage(int);
+extern void EnableInterrupt();
 extern PORT keyb_port;
-
+void usbkeyb_process(PROCESS, PARAM);
 void init_keyb();
+PORT init_usbkeyb();
 
 extern void UsbCheckForChange();
 
@@ -274,6 +292,7 @@ extern unsigned int KeyboardGetAddress();
 extern int KeyboardGetKeyDown(unsigned int, int);
 
 extern int KeyboardPoll(unsigned int);
+extern int KeyboardPollIntr(unsigned int);
 
 extern BYTE KeyboardGetModifiers(unsigned int);
 
@@ -289,14 +308,30 @@ extern BYTE keys_shift[104];
 int keyboard_get_char();
 
 void init_usb();
+void usb_notifier_process(PROCESS, PARAM);
 
 extern unsigned int keyboard_address;
+extern unsigned int keyboard_address_intr;
 extern short old_keys[6];
 
+void disable_keyboard();
+void enable_keyboard();
 /* usb.c */
-// Library in libcsud.a
+extern int intr_usb;      
+//enum USB_TRANSFER_RESULT {
+//    USB_TRANSFER_NULL,   // Not got any result yet.
+//    USB_TRANSFER_COMPLETE,
+//    USB_TRANSFER_NAK,
+//    USB_TRANSFER_RESTART,
+//};
+//volatile enum USB_TRANSFER_RESULT usb_transfer_result;
+typedef struct _Usb_Message {
+    int *result_buffer;
+} Usb_Message;
 extern int UsbInitialise();
-
+//extern int UsbInitialisePart1();
+//extern int UsbInitialisePart2();
+void isr_usb(void);
 /* ipc.c */
 #define MAX_PORTS (MAX_PROCS * 2)
 #define MAGIC_PORT 0x1234abcd
@@ -335,10 +370,40 @@ void reply(PROCESS sender);
 void init_ipc();
 
 /* intr.c */
+#define MAX_INTERRUPTS   64
+/* Based on BCM2835 Document Section 7.5 ARM peripherals interrupts table */
+//#define TIMER_IRQ           0
+#define USB_IRQ             9
 void init_interrupts(void);
-
+void wait_for_interrupt (int);
 void irq_handler(void);
 void master_isr(void);
+void isr_timer(void);
+void enable_irq(int);
+void disable_irq(int);
+extern int USBIRQHandler();
+PROCESS interrupt_table [MAX_INTERRUPTS];
+/* Based on BCM2835 Document Section 7.5 Interrupt Registers Overview */
+#define INTR_BASE       0x2000B200
+typedef volatile struct {
+    LONG IRQ_Basic_Pending;
+    LONG IRQ_Pending_1;
+    LONG IRQ_Pending_2;
+    LONG IRQ_FIQ_Control;
+    LONG Enable_IRQs_1;
+    LONG Enable_IRQs_2;
+    LONG Enable_Basic_IRQs;
+    LONG Disable_IRQs_1;
+    LONG Disable_IRQs_2;
+    LONG Disable_Basic_IRQs;
+} irq_controller_t;
+
+
+
+void (*isr_table[MAX_INTERRUPTS])(void);
+
+
+void isr_dispatcher(void);
 
 // Restore previous saved flag
 // Note: If the previous flag already disable IRQ, the IRQ won't enabled.
@@ -373,4 +438,125 @@ void lines_stop();
 void led_proc(PROCESS , PARAM );
 void init_led();
 void wait_150_cycles();
+
+/* serial.c */
+extern int SendToUSB(char *buf, int bufSize);
+extern int RecvFromUSB(char *buf, int bufSize);
+extern PORT serial_port;
+
+typedef struct _Serial_Message 
+{
+    char* output_buffer;
+    char* input_buffer;
+    int   len_input_buffer;
+} Serial_Message;
+
+void init_serial();
+
+
+/* train.c */
+void init_train(WINDOW* wnd);
+void set_train_speed(char* speed);
+void train_test();
+void inc_sleep_time(WINDOW * );
+void dec_sleep_time(WINDOW * );
+void inc_check_time(WINDOW * );
+void dec_check_time(WINDOW * );
+
+
+/* 
+ * timer.c 
+ * 
+ * BCM2835 document do not say the system clock frequency. 
+ * From http://xinu.mscs.mu.edu/BCM2835_System_Timer. It seems the clock 
+ * frequency is 1 MHz.
+ * 
+ * System Timer
+ * 
+ * BCM2835 have 4 system timer (C0-C3). (Ref BCM2835 Manual Section 12)
+ * C0, C2 used by GPU. We can use C1, C3. We use C3 here as timer. 
+ * 
+ * BCM2835 also have another timer on ARM side, which is based on ARM AP804. 
+ * (Ref BCM2835 Manual Section 14).
+ * This timer is derived from the system timer. This clock can change 
+ * dynamically e.g. if the system goes into reduced power or in low power mode. 
+ * Thus the clock speed adapts to the overal system performance capabilities. 
+ * For accurate timing it is recommended to use the system timers.
+ * 
+ * Each timer have their own IRQs. 
+ * For system timer C0 - C3:    IRQ 0 - IRQ 3 (IRQ_Pending_1)
+ * For Arm side timer:          IRQ 0         (IRQ_basic_pending)
+ * 
+ * BCM2835 document do not say the system clock frequency. 
+ * From http://xinu.mscs.mu.edu/BCM2835_System_Timer. It seems the clock 
+ * frequency is 1 MHz.
+ * 
+ * Ref.
+ * BCM2835 Manual Section 12/14
+ * http://xinu.mscs.mu.edu/BCM2835_System_Timer
+ * http://xinu.mscs.mu.edu/BCM2835_Interrupt_Controller
+ */ 
+#define CLOCK_FREQ          1000000
+#define CLKTICKS_PER_SEC    1000   // Our timer ticks per millisecond
+#define TIMER_IRQ           3
+
+// Ref BCM2835 Manual Section 12 (Page 172)
+#define SYS_TIMER_BASE      0x20003000
+typedef struct {
+    unsigned volatile int M0        : 1;    // System Timer Match 0
+    unsigned volatile int M1        : 1;    // System Timer Match 1
+    unsigned volatile int M2        : 1;    // System Timer Match 2
+    unsigned volatile int M3        : 1;    // System Timer Match 3
+    unsigned volatile int RSERVED   : 28;   // Reserved
+} SYS_TIMER_CS_REGISTER;
+
+typedef struct {
+    SYS_TIMER_CS_REGISTER   CS;    // System Timer Control/Status
+    unsigned int            CLO;   // System Timer Counter Lower 32 bits 
+    unsigned int            CHI;   // System Timer Counter Higher 32 bits
+    unsigned int            C0;    // System Timer Compare 0.  Used by GPU.
+    unsigned int            C1;    // System Timer Compare 1 
+    unsigned int            C2;    // System Timer Compare 2.  Used by GPU.
+    unsigned int            C3;    // System Timer Compare 3
+} system_timer_t;
+
+
+// Above is for system timer
+void sleep(int num_of_ticks);
+void init_timer();
+/* Timer header file for Raspberry Pi */
+/* Timer registers offset from BCM2835 Section 14.2 Timer Registers */
+#define ARM_TIMER_BASE  0x2000B400
+typedef volatile struct {
+    LONG Load;
+    LONG Value;
+    LONG Control;
+    LONG IRQ_Clear;
+    LONG RAW_IRQ;
+    LONG Masked_IRQ;
+    LONG Reload;
+    LONG Pre_Divider;
+    LONG Free_Running_Counter;
+} arm_timer_t;
+
+#define INTR_TIMER_CTRL_23BIT           (1 << 1) // Use 23-bit counter(it should be 32-bit)
+#define INTR_TIMER_CTRL_ENABLE          (1 << 7) // Timer Enabled
+#define INTR_TIMER_CTRL_INT_ENABLE      (1 << 5) // Enable Timer interrupt
+#define INTR_TIMER_CTRL_PRESCALE_1      (0 << 2) // Pre-scal is clock/1 (No pre-scale)
+
+
+void init_interrupts(void);
+extern PORT timer_port;
+typedef struct _Timer_Message 
+{
+    int num_of_ticks;
+} Timer_Message;
+int GetSystemTimerBase();
+int GetTimeStamp();
+arm_timer_t *GetARMTimer(void); 
+
+/* null.c */
+void init_null_process();
+void null_proc(PROCESS, PARAM);
+
 #endif

@@ -1,5 +1,6 @@
 #include <kernel.h>
 
+// TODO add more comments
 /*
  * Write a character into framebuffer
 */
@@ -135,16 +136,18 @@ void output_char(WINDOW *wnd, unsigned char c) {
 }
 
 void output_string(WINDOW *wnd, const char *str) {
+    volatile int cpsr_flag;
+    SAVE_CPSR_DIS_IRQ(cpsr_flag);
+
     while (*str != '\0')
         output_char(wnd, *str++);
+    RESUME_CPSR(cpsr_flag);
 }
 
 static WINDOW kernel_window_def = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, ' '};
 WINDOW *kernel_window = &kernel_window_def;
 
 void kprintf(const char *fmt, ...) {
-    volatile int cpsr_flag;
-    SAVE_CPSR_DIS_IRQ(cpsr_flag);
     va_list argp;
     char buf[160];
 
@@ -152,12 +155,9 @@ void kprintf(const char *fmt, ...) {
     vs_printf(buf, fmt, argp);
     output_string(kernel_window, buf);
     va_end(argp);
-    RESUME_CPSR(cpsr_flag);
 }
 
 void wprintf(WINDOW *wnd, const char *fmt, ...) {
-    volatile int cpsr_flag;
-    SAVE_CPSR_DIS_IRQ(cpsr_flag);
     va_list argp;
     char buf[160];
 
@@ -165,5 +165,20 @@ void wprintf(WINDOW *wnd, const char *fmt, ...) {
     vs_printf(buf, fmt, argp);
     output_string(wnd, buf);
     va_end(argp);
-    RESUME_CPSR(cpsr_flag);
+    
+}
+
+void debugprintf(WINDOW *wnd, const char *fmt, ...) {
+    va_list argp;
+    char buf[160];
+
+    va_start(argp, fmt);
+    vs_printf(buf, fmt, argp);
+    debug_output_string(wnd, buf);
+    va_end(argp);
+}
+
+void debug_output_string(WINDOW *wnd, const char *str) {
+    while (*str != '\0')
+        output_char(wnd, *str++);
 }

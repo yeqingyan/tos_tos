@@ -1,8 +1,11 @@
 # The platform can be raspi or qemu
 PLATFORM := qemu
 
-ARMGNU ?= arm-none-eabi
+# Path to GCC embedded tool chain
+ARMGNU ?= /Users/alan/tools/gcc-arm-none-eabi-5_3-2016q1/bin/arm-none-eabi
+#ARMGNU ?= arm-none-eabi
 
+# -fshort-wchar used by usb library for usb string, added here to remove warnning message. 
 GCCARGS =  -Wall -nostdinc -I./include -g -fomit-frame-pointer -fno-defer-pop -mcpu=arm1176jzf-s
 # The intermediate directory for compiled object files.
 BUILD = build/
@@ -20,7 +23,7 @@ LIST = kernel.list
 MAP = kernel.map
 
 # The names of all object files
-OBJECTS := build/dispatch.o build/gpio.o build/mem.o build/process.o build/stdlib.o build/systemTimer.o  build/start.o build/intr.o build/mailbox.o build/font.o build/drawing.o build/pacman.o build/window.o build/assert.o build/framebuffer.o build/ipc.o build/usb.o build/shell.o build/keyb.o build/video_test.o build/led.o
+OBJECTS := build/dispatch.o build/gpio.o build/mem.o build/process.o build/stdlib.o build/start.o build/intr.o build/mailbox.o build/font.o build/drawing.o build/pacman.o build/window.o build/assert.o build/framebuffer.o build/ipc.o build/usb.o build/shell.o build/keyb.o build/video_test.o build/led.o build/serial.o build/train.o build/timer.o build/null.o build/main.o
 #build/test_dummy_1.o build/common.o 
 #OBJECTS := $(patsubst $(SOURCE)%.c,$(BUILD)%.o,$(wildcard $(SOURCE)*.c)) $(patsubst $(SOURCE)%.s, $(BUILD)%.o, $(wildcard $(SOURCE)*.s))
 
@@ -33,7 +36,7 @@ else ifeq ($(PLATFORM), raspi)
 endif
 
 # Rule to make everything.
-all: build/main.o $(TARGET) $(LIST) 
+all: $(BUILD) $(TARGET) $(LIST) 
 
 # Rule to remake everything. Does not include clean.
 rebuild: all
@@ -49,17 +52,17 @@ $(TARGET) : $(BUILD)output.elf
 # Rule to make the elf file.
 # TODO add ,--no-wchar-size-warning if no error happened
 # USB -Wl,-L,.,-l,csud
-$(BUILD)output.elf : $(OBJECTS)
+$(BUILD)output.elf : $(OBJECTS) libcsud.a
 	#$(ARMGNU)-gcc $(GCCARGS) $(OBJECTS) build/main.o -o $(BUILD)output.elf -Wl,-L,.,-l,csud,--section-start,.init=$(BOOT_ADDRESS),--section-start,.stack=0xA00000,-Map=$(MAP)
-	$(ARMGNU)-gcc -nostartfiles $(OBJECTS) build/main.o -o $(BUILD)output.elf -Wl,-L,.,-l,csud,--section-start,.init=$(BOOT_ADDRESS),--section-start,.stack=0xA00000,-Map=$(MAP)
+	$(ARMGNU)-gcc -nostartfiles $(OBJECTS) -o $(BUILD)output.elf -Wl,-L,.,-l,csud,--section-start,.init=$(BOOT_ADDRESS),--section-start,.stack=0xA00000,-Map=$(MAP)
 
 # Rule to make the object files.
 # Note by Yeqing:
 # Gcc using -O2 or -O3 sometimes got problems, if code runs not as expected, try turn off -O first 
-$(BUILD)%.o: $(SOURCE)%.c $(BUILD)
+$(BUILD)%.o: $(SOURCE)%.c 
 	$(ARMGNU)-gcc $(GCCARGS) -c $< -o $@
 
-$(BUILD)%.o: $(SOURCE)%.s $(BUILD)
+$(BUILD)%.o: $(SOURCE)%.s 
 	$(ARMGNU)-as -I./include $< -o $@
     
 # Generate object file from binary    
@@ -78,3 +81,4 @@ clean :
 	-rm -f $(TARGET)
 	-rm -f $(LIST)
 	-rm -f $(MAP)
+	

@@ -1,145 +1,123 @@
 #include <kernel.h>
 
+// Ref. Raspberry Pi baremetal screen.
+// http://www.cl.cam.ac.uk/projects/raspberrypi/tutorials/os/screen02.html
+// http://www.cl.cam.ac.uk/projects/raspberrypi/tutorials/os/screen03.html
+
+// Pointer to font binary, generate from binary file in makefile 
 extern unsigned char *_binary_font_font_bin_start;
 
-/*
- * get_fore_colour()
- * -----------------
- *  Get 16bit foreground color
- *
- *  Return:
- *  Foreground color
+/**
+ * Get 16bit foreground color
+ * 
+ * @return  foreground color
  */
 WORD get_fore_colour() {
     return foreground_color;
 }
 
-/*
- * set_fore_colour()
- * -----------------
- *  Set 16bit foreground color
- *
- * Parameters:
- * colour: Fore colour
+/**
+ * Set 16bit foreground color
+ * 
+ * @param   foreground colour
  */
 void set_fore_colour(short colour) {
-    if (colour > 0x10000)   /* colour should lower than 0x10000 */
+    if (colour > 0x10000) /* colour should lower than 0x10000 */
         return;
     else
         foreground_color = colour;
 }
 
-/*
- * get_back_colour()
- * -----------------
- *  Get 16bit background colour
- *
- *  Return:
- *  16bit background colour
+/**
+ * Get 16bit background colour
+ * 
+ * @return  16bit background colour
  */
 WORD get_back_colour() {
     return background_color;
 }
 
-/*
- * set_back_colour()
- * -----------------
- *  Set 16bit background colour
- *
- * Parameters:
- *  colour: Back ground colour
+/**
+ * Set 16bit background color
+ * @param   Background color
  */
 void set_back_colour(short colour) {
-    if (colour > 0x10000)   /* colour should lower than 0x10000 */
+    if (colour > 0x10000) /* colour should lower than 0x10000 */
         return;
     else
         background_color = colour;
 }
 
-/*
- * set_graphics_address()
- * ----------------------
- *  Store the framebuffer information into global variable
- *
- * Parameters:
- *  address: framebuffer struct Address
+/**
+ * Store the framebuffer information into global variable
+ * 
+ * @param address   framebuffer structure address
  */
 void set_graphics_address(FrameBufferInfo *address) {
     graphicsAddress = address;
 }
 
-/*
- * set_pixel()
- * -----------
- * Draw a pixel at row y, column x.
- * This function only work for high color(16-bit)
- *
- * Parameters:
- * x: x coordinate
- * y: y coordinate
+/**
+ * Draw a pixel at row y, column x. Only for high color(16bit)
+ * 
+ * @param x     x coordinate
+ * @param y     y coordinate
  */
 void set_pixel(int x, int y) {
-    int height, width;
     short *gpu_pointer;
+    int height, width;
+    // Compute the address of the pixel to write 
+    gpu_pointer = (short *) graphicsAddress->gpu_pointer;
 
-    height = graphicsAddress->p_height;     /* Get Height */
+    height = graphicsAddress->p_height; // Get Height 
     height--;
     if (y > height) goto ERROR;
 
-    width = graphicsAddress->p_width;       /* Get Width */
+    width = graphicsAddress->p_width; // Get Width 
     width--;
     if (x > width) goto ERROR;
 
-    /* Compute the address of the pixel to write */
-    gpu_pointer = (short *) graphicsAddress->gpu_pointer;
     width++;
-    *(gpu_pointer + (x + y * width)) = foreground_color;  /* Calculate pixel position in memory */
-    ERROR:
+    // Calculate pixel position in memory 
+    *(gpu_pointer + (x + y * width)) = foreground_color;
+ERROR:
     return;
 }
 
-/*
- * clear_pixel()
- * -------------
+/**
  * Clear a pixel at row y, column x.
  * This function only work for high color(16-bit)
- *
- * Parameters:
- * x: x coordinate
- * y: y coordinate
+ * 
+ * @param x     x coordinate
+ * @param y     y coordinate
  */
 void clear_pixel(int x, int y) {
     int height, width;
     short *gpu_pointer;
 
-    height = graphicsAddress->p_height;     /* Get Height */
+    height = graphicsAddress->p_height; /* Get Height */
     height--;
     if (y > height) goto ERROR;
 
-    width = graphicsAddress->p_width;       /* Get Width */
+    width = graphicsAddress->p_width; /* Get Width */
     width--;
     if (x > width) goto ERROR;
 
     /* Compute the address of the pixel to write */
     gpu_pointer = (short *) graphicsAddress->gpu_pointer;
     width++;
-    *(gpu_pointer + (x + y * width)) = background_color;  /* Calculate pixel position in memory */
-    ERROR:
+    *(gpu_pointer + (x + y * width)) = background_color; /* Calculate pixel position in memory */
+ERROR:
     return;
 }
 
-/*
- * get_pixel_16bit()
- * -----------------
+/**
  * Return pixel value(16bit) from location(x,y) on screen
- *
- * Parameters:
- * x: x coordinate
- * y: y coordinate
- *
- * Return:
- * 16 bit colour
-*/
+ * 
+ * @param x     x coordinate
+ * @param y     y coordinate
+ * @return      16 bit color
+ */
 WORD get_pixel_16bit(int x, int y) {
     WORD *gpu_pointer;
 
@@ -149,19 +127,17 @@ WORD get_pixel_16bit(int x, int y) {
     gpu_pointer = (WORD *) graphicsAddress->gpu_pointer;
 
     return *(gpu_pointer + (x + y * graphicsAddress->p_width));
-    ERROR:
+ERROR:
     return 0;
 }
 
-/* copy_pixel_16bit()
- * ------------------
+/**
  * Copy pixel from location(src_x, src_y) to location(des_x, des_y)
- *
- * Parameters:
- * src_x: source x coordinate
- * src_y: source y coordinate
- * des_x: destination x coordinate
- * des_y: destination y coordinate
+ * 
+ * @param src_x     source x coordinate
+ * @param src_y     source y coordinate
+ * @param des_x     destination x coordinate
+ * @param des_y     destination y coordinate
  */
 void copy_pixel_16bit(int src_x, int src_y, int des_x, int des_y) {
     if (src_y > (graphicsAddress->p_height - 1)) goto ERROR;
@@ -173,27 +149,25 @@ void copy_pixel_16bit(int src_x, int src_y, int des_x, int des_y) {
     gpu_pointer = (WORD *) graphicsAddress->gpu_pointer;
 
     *(gpu_pointer + (des_x + des_y * graphicsAddress->p_width)) = *(gpu_pointer +
-                                                                    (src_x + src_y * graphicsAddress->p_width));
+            (src_x + src_y * graphicsAddress->p_width));
     return;
-    ERROR:
+ERROR:
     return;
 }
 
-/*
- * draw_line()
- * -----------
+/**
  * Draw a line by using Bresenham's Algorithm
- *
- * Parameters:
- * x0: source x coordinate
- * y0: source y coordinate
- * x1: destination x coordinate
- * y1: destination y coordinate
+ * 
+ * @param x0        source x coordinate
+ * @param y0        source y coordinate
+ * @param x1        destination x coordinate
+ * @param y1        destination y coordinate
+ * @param color     line color
  */
 void draw_line(int x0, int y0, int x1, int y1, unsigned short color) {
     volatile unsigned int cpsr_flag;
     SAVE_CPSR_DIS_IRQ(cpsr_flag);
-    
+
     int deltax, deltay, stepy, stepx, error, error2, fore_color;
 
     fore_color = get_fore_colour();
@@ -221,9 +195,8 @@ void draw_line(int x0, int y0, int x1, int y1, unsigned short color) {
     }
     error = error / 2;
 
-    for (; ;) {
+    while (x0 != x1 || y0 != y1) {
         set_pixel(x0, y0);
-        if (x0 == x1 && y0 == y1) break;
         error2 = error;
         if (error2 > (0 - deltax)) {
             error -= deltay;
@@ -238,15 +211,12 @@ void draw_line(int x0, int y0, int x1, int y1, unsigned short color) {
     RESUME_CPSR(cpsr_flag);
 }
 
-/*
- * draw_character()
- * ----------------
- *  Draw character on screen
- *
- *  Parameters:
- *  character:      character to draw
- *  x:              character x coordinate
- *  y:              character y coordinate
+/**
+ * Draw character on screen
+ * 
+ * @param character     character to draw
+ * @param x             character x coordinate
+ * @param y             character y coordinate
  */
 void draw_character(char character, int x, int y) {
     /* Get the font binary address by run objdump -t build/font.o */
@@ -258,11 +228,11 @@ void draw_character(char character, int x, int y) {
         return;
     }
 
-    /* Each character have 16 bytes in font.bin */
+    // Each character cost 16 bytes in font.bin 
     font_addr += CHARACTER_SIZE * character;
 
     for (row = 0; row < CHARACTER_HEIGHT; row += 1) {
-        bits = (unsigned int) peek_b((MEM_ADDR)(font_addr + row));
+        bits = (unsigned int) peek_b((MEM_ADDR) (font_addr + row));
         bit = CHARACTER_WIDTH;
         do {
             bits = bits << 1;

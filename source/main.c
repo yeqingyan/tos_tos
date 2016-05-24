@@ -1,7 +1,7 @@
 #include <kernel.h>
-
+// TODO
 int kernel_main();
-
+//
 //void test_process_1(PROCESS, PARAM);
 //
 //void test_1_foo() {
@@ -20,7 +20,7 @@ int kernel_main();
 //        kprintf(test_str);
 //        //ret = WriteString(test_str);
 //        if (ret == -1) {
-//            error();
+//            assert(0);
 //        }
 //        //   resign();
 //    }
@@ -42,7 +42,7 @@ int kernel_main();
 //        kprintf(test_str);
 //        //ret = WriteString(test_str);
 //        if (ret == -1) {
-//            error();
+//            assert(0);
 //        }
 //        //resign();
 //    }
@@ -63,29 +63,34 @@ int kernel_main() {
     //GpioOutputSetup(14, 18, 15);
     //error();
     init_video();
-    kprintf("Init frame buffer Done\n");
+    //kprintf("Init frame buffer Done\n");
 
     init_process();
-    kprintf("Init Process Done\n");
+    //kprintf("Init Process Done\n");
 
     init_dispatcher();
-    kprintf("Init Dispatcher Done\n");
+    //kprintf("Init Dispatcher Done\n");
 
     init_ipc();
-    kprintf("Init ipc Done\n");
-    /*
-    create_process(test_process_1, 5, 42, "TEST PROCESS A");
-    create_process(test_process_2, 5, 42, "TEST PROCESS B");
-    init_interrupts();
-    while (1) { };*/
-    init_usb();
+    //kprintf("Init ipc Done\n");
+    
+//    create_process(test_process_1, 5, 42, "TEST PROCESS A");
+//    create_process(test_process_2, 5, 42, "TEST PROCESS B");
+//    init_interrupts();
+//    while (1) {};
+    
+    init_null_process();
+    init_usb_busy_wait();
 
-    init_keyb();
+    //init_usb_intr();
+    //init_keyb();
+    //init_serial();
     init_shell();
     init_lines_test();
     init_interrupts();
-    kprintf("Init interrupt Done\n");    
+    
+    
 
-    while (1) { };
+    while (1);
     return 0;
 }
