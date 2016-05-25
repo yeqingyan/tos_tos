@@ -1,5 +1,5 @@
 # The platform can be raspi or qemu
-PLATFORM := qemu
+PLATFORM := raspi
 
 # Path to GCC embedded tool chain
 ARMGNU ?= /Users/alan/tools/gcc-arm-none-eabi-5_3-2016q1/bin/arm-none-eabi

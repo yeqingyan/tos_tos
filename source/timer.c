@@ -72,7 +72,6 @@ void timer_process(PROCESS self, PARAM param) {
     int proc_index;
     int i;
 
-    //    kprintf("Create Timer notifier\n");
     create_process(timer_notifier, 7, 0, "Timer notifier");
     while (42) {
         Timer_Message *msg = receive(&sender);
@@ -176,5 +175,8 @@ void init_timer() {
     isr_table[TIMER_IRQ] = isr_timer;
     // Enable receive timer interrupt IRQ
     enable_irq(TIMER_IRQ);
+    get_system_timer()->C3 = get_system_timer()->CLO + 
+            (CLOCK_FREQ / CLKTICKS_PER_SEC);
+    timer_port = create_process(timer_process, 6, 0, "Timer Process");
 }
 

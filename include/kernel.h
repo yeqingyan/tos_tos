@@ -467,10 +467,6 @@ void dec_check_time(WINDOW * );
 /* 
  * timer.c 
  * 
- * BCM2835 document do not say the system clock frequency. 
- * From http://xinu.mscs.mu.edu/BCM2835_System_Timer. It seems the clock 
- * frequency is 1 MHz.
- * 
  * System Timer
  * 
  * BCM2835 have 4 system timer (C0-C3). (Ref BCM2835 Manual Section 12)

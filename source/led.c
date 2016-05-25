@@ -80,8 +80,9 @@ void led_proc(PROCESS self, PARAM param) {
             if (led_status == 1) {
                 wprintf(led_ptr, "Turn off LED\n");
                 led_status = 0;
-                // need to use set_gpio() otherwise USB do not work, maybe have something to do with Memory Barrier mentioned in BCM2835 manual. TODO 
+                // need to use set_gpio() otherwise USB do not work, maybe have something to do with Memory Barrier mentioned in BCM2835 manual. TODO
                 //set_gpio(PIN_OUT, 0);
+                // Very strange problem, if we use the following instruction, USB will failed on transfer packet..
                 ((GPSET_GPCLR_REG *)(gpio_base_addr + CLR_OFFSET))->pin7 = 1 ;// If Pin 8 is low, turn Pin 7 off to light off LED    
             }
         }

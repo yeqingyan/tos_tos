@@ -78,6 +78,7 @@ void irq_handler(void) {
 //        //kprintf("run timer\n");
 //        isr_table[TIMER_IRQ]();
 //    }
+    
     if (((GetIRQController()->Enable_IRQs_1) & (1 << TIMER_IRQ)) > 0) {
         assert(isr_table[TIMER_IRQ] != NULL);
         isr_table[TIMER_IRQ]();
@@ -103,6 +104,7 @@ void irq_handler(void) {
 }
 
 /**
+ * TODO also used in timer irq.  need more comments
  * Data memory barrier. Used in master_isr() and resign().
  * 
  * According to BCM2835 1.3 Peripheral access precautions for correct memory 
@@ -142,6 +144,7 @@ void dmb(void) {
     // r12: Rd. SBZ(Should be zero)
     // Ref. ARM Manual A8.8.98 
     // Ref. ARM Arm1176jzfs Manual Page 3-84
+//    asm("mcr p15,  0, r12, c7, c10, 5");
     asm("mcr p15,  0, r12, c7, c10, 5");
     asm("mov pc, lr");
 }

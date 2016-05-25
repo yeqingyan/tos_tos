@@ -98,7 +98,6 @@ void keyb_notifier(PROCESS self, PARAM param) {
     
     while (1) {
         SAVE_CPSR_DIS_IRQ(cpsr_flag);
-//        kprintf("Call keyboard_update\n");
         keyboard_update();
         key = keyboard_get_char();
 //        kprintf("Got new key %x\n", key);
@@ -106,7 +105,6 @@ void keyb_notifier(PROCESS self, PARAM param) {
         if (key != 0) {
             new_key = key;
             msg.key_buffer = (BYTE *) & new_key;
-//            kprintf("Got new key %c\n", *(msg.key_buffer));
             message(keyb_port, &msg);
         }
     }

@@ -86,7 +86,7 @@ void run_command(char *cmd) {
         wprintf(wnd_ptr, "inc_sleep/dec_sleep   - Inc/Dec sleep time \n");
         wprintf(wnd_ptr, "inc_check/dec_check   - Inc/Dec check time\n");
     } else if (str_cmp(cmd, "ps") == 0) {
-        ps();
+        print_all_processes(wnd_ptr);
     } else if (str_cmp(cmd, "clear") == 0) {
         // clear window and reset the shell window pointer 
         clear_window(kernel_window); 

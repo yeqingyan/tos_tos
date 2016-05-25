@@ -104,18 +104,12 @@ void dispatcher_impl() {
  */
 void resign() {
     // Save CPSR register and link register 
-    // SRS (Store Return State) stores the LR and SPSR of the current mode to 
-    // the stack in SYS mode. (0x1f) indicate the SYS mode. "db" (Decrement 
-    // Before) suffix means CPU will decrement the stack pointer before storing 
-    // values onto stack. "!" means after store R14 and SPSR of the IRQ mode 
-    // into SYS mode stack, update the stack pointer in SYS mode. (Ref. ARM 
-    // Manual B9.3.16)
-    // This instruction is equal to:
-   // TODO they are different !!!!
+    // Simliar to instruction "srsdb #0x1f!". Since SRS can not be used in SYS 
+    // mode(ARM Manual B9.3.16) and SYS mode do not have SPSR. We need to use 3 
+    // instrctions here.    
     asm("mrs r12, cpsr");
     asm("push {r12}");
     asm("push {lr}");
-    //asm("srsdb #0x1f!"); // store lr and SPSR to stack
     
     // Save the content of the current process
     //    
@@ -139,8 +133,11 @@ void resign() {
     
     // RFE (Return From Exception) loads LR, SPSR on SYS stack into PC and CPSR 
     // registers, "ia" (increase after) means increment stack pointer after 
-    // read from stack. "!" means update value in sp after instruction. (Ref. 
-    // ARM Manual B9.3.13)
+    // read from stack. "!" means update value in sp after instruction. 
+    // 
+    // Note: "As identified in Restrictions on exception return instructions on 
+    // page B9-1972, RFE differs from other exception return instructions in 
+    // that it CAN be executed in System mode." (Ref. ARM Manual B9.3.13)
     asm("rfeia sp!");
 }
 

@@ -1,7 +1,7 @@
 #include <kernel.h>
 // TODO
 int kernel_main();
-//
+
 //void test_process_1(PROCESS, PARAM);
 //
 //void test_1_foo() {
@@ -72,7 +72,7 @@ int kernel_main() {
     //kprintf("Init Dispatcher Done\n");
 
     init_ipc();
-    //kprintf("Init ipc Done\n");
+    kprintf("Init ipc Done\n");
     
 //    create_process(test_process_1, 5, 42, "TEST PROCESS A");
 //    create_process(test_process_2, 5, 42, "TEST PROCESS B");
@@ -82,14 +82,9 @@ int kernel_main() {
     init_null_process();
     init_usb_busy_wait();
 
-    //init_usb_intr();
-    //init_keyb();
-    //init_serial();
     init_shell();
     init_lines_test();
     init_interrupts();
-    
-    
 
     while (1);
     return 0;
