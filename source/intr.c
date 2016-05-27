@@ -144,8 +144,9 @@ void dmb(void) {
     // r12: Rd. SBZ(Should be zero)
     // Ref. ARM Manual A8.8.98 
     // Ref. ARM Arm1176jzfs Manual Page 3-84
-//    asm("mcr p15,  0, r12, c7, c10, 5");
+    asm("mcr p15,  0, r12, c7, c10, 4");
     asm("mcr p15,  0, r12, c7, c10, 5");
+    asm("mcr p15,  0, r12, c7, c5, 4");
     asm("mov pc, lr");
 }
 
@@ -174,6 +175,7 @@ void master_isr(void) {
     // Save stack pointer
     asm("mov %[old_sp], %%sp" : [old_sp] "=r"(active_proc->sp) :);
     // Handle IRQs 
+    asm("bl dmb");
     asm("bl irq_handler");
     // Memory barrier
     asm("bl dmb");
