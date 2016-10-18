@@ -2,7 +2,7 @@
 PLATFORM := raspi
 
 # Path to GCC embedded tool chain
-ARMGNU ?= /Users/alan/tools/gcc-arm-none-eabi-5_3-2016q1/bin/arm-none-eabi
+ARMGNU ?= arm-none-eabi
 #ARMGNU ?= arm-none-eabi
 
 # -fshort-wchar used by usb library for usb string, added here to remove warnning message. 
