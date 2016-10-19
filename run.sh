@@ -1,1 +1,1 @@
-~/qemu-tos/arm-softmmu/qemu-system-arm -s -M raspi -cpu arm1176 -kernel kernel.img -device usb-kbd -chardev socket,id=fakechar,port=8888,host=localhost -device usb-serial,chardev=fakechar -monitor stdio
+~/qemu-tos/arm-softmmu/qemu-system-arm -s -M raspi -cpu arm1176 -kernel kernel.img -device usb-kbd -monitor stdio
