@@ -2,35 +2,35 @@
 // TOOD add comments
 PORT usb_notifier_port;
 
-// In usb.c or keyb.c, if the function name is CamelCase, that function is 
-// from libcsud 
+// In usb.c or keyb.c, if the function name is CamelCase, that function is
+// from libcsud
 
-// busy wait or interrupt usb. Used by interrupt init_interrupts()          
+// busy wait or interrupt usb. Used by interrupt init_interrupts()
 int intr_usb;
 
 /**
  * Initialize usb busy wait version
  */
 void init_usb_busy_wait() {
-    intr_usb = 0;
-    UsbInitialise();
-    keyboard_address = 0;
-    init_keyb();
+  intr_usb = 0;
+  UsbInitialise();
+  keyboard_address = 0;
+  init_keyb();
 }
 
 /**
  * Initialize usb interrupt version
  */
 void init_usb_intr() {
-    intr_usb = 1;
-    UsbInitialise();
-    init_usbkeyb();
+  intr_usb = 1;
+  UsbInitialise();
+  init_usbkeyb();
 }
 
 /**
  * Enable usb interrupts.
  */
-//void init_usb_interrupts() {
+// void init_usb_interrupts() {
 ////    usb_transfer_result = USB_TRANSFER_NULL;
 //    EnableUSBInterrupt(); // Call func in libcsud to enable usb.
 //    isr_table[USB_IRQ] = isr_usb;
@@ -40,7 +40,7 @@ void init_usb_intr() {
 /**
  * usb isr
  */
-//void isr_usb(void) {
+// void isr_usb(void) {
 //    int result;
 //    USBIRQHandler();
 //    result = USBIRQHandler();

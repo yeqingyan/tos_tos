@@ -2,8 +2,7 @@
 PLATFORM := raspi
 
 # Path to GCC embedded tool chain
-ARMGNU ?= /Users/alan/tools/gcc-arm-none-eabi-5_3-2016q1/bin/arm-none-eabi
-#ARMGNU ?= arm-none-eabi
+ARMGNU ?= arm-none-eabi
 
 # -fshort-wchar used by usb library for usb string, added here to remove warnning message. 
 GCCARGS =  -Wall -nostdinc -I./include -g -fomit-frame-pointer -fno-defer-pop -mcpu=arm1176jzf-s
@@ -71,9 +70,6 @@ build/font.o: font/font.bin
 
 $(BUILD):
 	mkdir $@
-
-# Make tests
-tests: 
 
 # Rule to clean files.
 clean : 

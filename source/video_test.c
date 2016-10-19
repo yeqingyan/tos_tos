@@ -1,9 +1,9 @@
 #include <kernel.h>
 
-// Draw lines on screen 
+// Draw lines on screen
 
 // 5 x 15
-// Row  
+// Row
 // Col 640 Row 400
 // Width 40 Height 240
 WINDOW lines_wnd = {80, 25, 45, 15, 0, 0, ' '};
@@ -11,52 +11,49 @@ WINDOW *lines_ptr = &lines_wnd;
 
 PROCESS lines_proc_ptr;
 
-int last_x=640, last_y=400, cur_x, cur_y;
+int last_x = 640, last_y = 400, cur_x, cur_y;
 
 /**
  * Stop drawing lines
  */
 void lines_stop() {
-    remove_ready_queue(lines_proc_ptr);
-    clear_window(lines_ptr);
+  remove_ready_queue(lines_proc_ptr);
+  clear_window(lines_ptr);
 }
 
 /**
  * Start drawing lines
  */
-void lines_start() {
-    add_ready_queue(lines_proc_ptr);
-}
+void lines_start() { add_ready_queue(lines_proc_ptr); }
 
 /**
  * Draw lines process
- * 
+ *
  * @param self
  * @param param
  */
-void lines_proc(PROCESS self, PARAM param)
-{
-    unsigned short line_color = 0;
-    remove_ready_queue(lines_proc_ptr);
-    resign();
-    while(1) {
-        cur_x = 640 + random() % 360;
-        cur_y = 400 + random() % 240;
-        draw_line(last_x, last_y, cur_x, cur_y, line_color);
-        line_color += 1;
-        line_color = line_color % 655355;
-        last_x = cur_x;
-        last_y = cur_y;
-        //Wait(1000);
-        sleep(1);
-    }          
+void lines_proc(PROCESS self, PARAM param) {
+  unsigned short line_color = 0;
+  remove_ready_queue(lines_proc_ptr);
+  resign();
+  while (1) {
+    cur_x = 640 + random() % 360;
+    cur_y = 400 + random() % 240;
+    draw_line(last_x, last_y, cur_x, cur_y, line_color);
+    line_color += 1;
+    line_color = line_color % 655355;
+    last_x = cur_x;
+    last_y = cur_y;
+    // Wait(1000);
+    sleep(1);
+  }
 }
 
 /**
  * initalize draw lines
  */
-void init_lines_test() {    
-    PORT lines_port;
-    lines_port = create_process(lines_proc, 5, 0, "Draw Line Test");
-    lines_proc_ptr = lines_port->owner;
+void init_lines_test() {
+  PORT lines_port;
+  lines_port = create_process(lines_proc, 5, 0, "Draw Line Test");
+  lines_proc_ptr = lines_port->owner;
 }

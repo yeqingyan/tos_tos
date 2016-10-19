@@ -11,12 +11,12 @@ static WINDOW error_window = {0, 41, 80, 1, 0, 0, ' '};
  * @param func  function name when error happened
  */
 void panic_mode(const char *msg, const char *file, int line, const char *func) {
-    volatile unsigned int cpsr_flag;
-    SAVE_CPSR_DIS_IRQ(cpsr_flag);
-    clear_window(&error_window);
-    wprintf(&error_window, "PANIC: '%s' at line %d of %s (function %s)",
-            msg, line, file, func);
-    while (1);
+  volatile unsigned int cpsr_flag;
+  SAVE_CPSR_DIS_IRQ(cpsr_flag);
+  clear_window(&error_window);
+  wprintf(&error_window, "PANIC: '%s' at line %d of %s (function %s)",
+          msg, line, file, func);
+  while (1);
 }
 
 /**
@@ -26,41 +26,47 @@ void panic_mode(const char *msg, const char *file, int line, const char *func) {
  * these processor modes, since wprintf will push/pop variables. Same for the 
  * following exceptions.
  */
-void reset_handler(void) {
-    while (1);
+void reset_handler(void)
+{
+  while (1);
 }
 
 /**
  * Undefined exception happened
  */
-void undef_handler(void) {
-    while (1);
+void undef_handler(void)
+{
+  while (1);
 }
 
 /**
  * Software interrupt(SWI) exception happened.
  */
-void swi_handler(void) {
-    while (1);
+void swi_handler(void)
+{
+  while (1);
 }
 
 /**
  * Prefetch abort exception happened.
  */
-void prefetch_handler(void) {
-    while (1);
+void prefetch_handler(void)
+{
+  while (1);
 }
 
 /**
  * Data abort exception happened.
  */
-void abort_handler(void) {
-    while (1);
+void abort_handler(void)
+{
+  while (1);
 }
 
 /**
  * Fast interrupt exception happened.
  */
-void fiq_handler(void) {
-    while (1);
+void fiq_handler(void)
+{
+  while (1);
 }
