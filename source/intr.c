@@ -80,7 +80,7 @@ void irq_handler(void) {
   //        isr_table[TIMER_IRQ]();
   //    }
 
-  if (((GetIRQController()->Enable_IRQs_1) & (1 << TIMER_IRQ)) > 0) {
+  if (((GetIRQController()->IRQ_Pending_1) & (1 << TIMER_IRQ)) > 0) {
     assert(isr_table[TIMER_IRQ] != NULL);
     isr_table[TIMER_IRQ]();
   }
